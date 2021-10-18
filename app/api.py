@@ -1,7 +1,7 @@
 from fastapi import FastAPI, responses
 from app.models import *
 from random import randint
-from app.partida.endpoints import router as gamesRouter
+from app.games.endpoints import router as gamesRouter
 
 app = FastAPI()
 
