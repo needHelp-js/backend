@@ -1,14 +1,16 @@
 from fastapi import FastAPI
+from config import Config
 from app.models import db
-from app.games.endpoints import router as gameRouter
 
-app = FastAPI()
-app.include_router(gameRouter)
+def create_app(config: Config):
 
-db.bind('sqlite', 'DataBase.sqlite', create_db=True)
-db.generate_mapping(create_tables=True)
+    db.bind(**config.dbBind)
+    db.generate_mapping(create_tables=config.createTables)
 
+    app = FastAPI()
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+    from app.games.endpoints import router as gameRouter
+
+    app.include_router(gameRouter)
+
+    return app
