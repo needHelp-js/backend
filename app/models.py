@@ -2,17 +2,17 @@ from pony.orm import *
 
 db = Database()
 
-class Partida(db.Entity):
+class Game(db.Entity):
     id = PrimaryKey(int, auto=True)
-    nombre = Required(str, unique=True)
-    iniciada = Required(bool, default=False)
+    name = Required(str, unique=True)
+    started = Required(bool, default=False)
     currentTurn = Optional(int, default=0)
-    jugadores = Set('Jugador', reverse='partidaEnCurso')
-    host = Required('Jugador', reverse='partidaHost')
+    players = Set('Player', reverse='currentGame')
+    host = Required('Player', reverse='hostedGame')
 
-class Jugador(db.Entity):
+class Player(db.Entity):
     id = PrimaryKey(int, auto=True)
     nickname = Required(str)
     turnOrder = Optional(int)
-    partidaEnCurso = Optional(Partida, reverse='jugadores')
-    partidaHost = Optional(Partida, reverse='host')
+    currentGame = Optional(Game, reverse='players')
+    hostedGame = Optional(Game, reverse='host')

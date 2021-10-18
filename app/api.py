@@ -1,7 +1,7 @@
 from fastapi import FastAPI, responses
 from app.models import *
 from random import randint
-from app.partida.endpoints import router as partidaRouter
+from app.partida.endpoints import router as gamesRouter
 
 app = FastAPI()
 
@@ -12,4 +12,4 @@ db.generate_mapping(create_tables=True)
 async def root():
     return {"message": "Hello World"}
 
-app.include_router(partidaRouter)
+app.include_router(gamesRouter)
