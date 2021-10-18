@@ -16,6 +16,5 @@ def createGame(gameCreationData: CreateGameSchema, response: Response):
         hostPlayer = Player(nickname=gameCreationData.hostNickname,
                             turnOrder=0)
         newGame = Game(name=gameCreationData.gameName, host=hostPlayer)
-        hostPlayer.hostedGame = newGame
 
     return {'idPartida': newGame.id, 'idHost': hostPlayer.id}
