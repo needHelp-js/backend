@@ -5,6 +5,7 @@ from pony.orm import db_session
 
 router = APIRouter(prefix='/games')
 
+
 @router.post('', status_code=status.HTTP_201_CREATED)
 def createGame(gameCreationData: CreateGameSchema, response: Response):
     with db_session:
@@ -12,8 +13,9 @@ def createGame(gameCreationData: CreateGameSchema, response: Response):
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {'Error': f'Partida {gameCreationData.gameName} ya existe'}
 
-        hostPlayer = Player(nickname=gameCreationData.hostNickname, turnOrder=0)
+        hostPlayer = Player(nickname=gameCreationData.hostNickname,
+                            turnOrder=0)
         newGame = Game(name=gameCreationData.gameName, host=hostPlayer)
-        hostPlayer.hostedGame=newGame
-    
-    return {'partida': gameCreationData}
+        hostPlayer.hostedGame = newGame
+
+    return {'idPartida': newGame.id, 'idHost': hostPlayer.id}
