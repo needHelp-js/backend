@@ -5,7 +5,7 @@ from random import randint
 router = APIRouter(prefix='/games')
 
 @router.get("/dice")
-async def get_dado(idP:int, idJ:int, response:Response):
+async def getDice(idP:int, idJ:int, response:Response):
     with db_session:
         p = Game.get(id=idP)
         j = Player.get(id=idJ)
