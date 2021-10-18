@@ -1,12 +1,12 @@
 from fastapi import FastAPI
+from config import Config
 from app.models import db
 
-app = FastAPI()
+def create_app(config: Config):
 
-db.bind('sqlite', 'DataBase.sqlite', create_db=True)
-db.generate_mapping(create_tables=True)
+    db.bind(**config.dbBind)
+    db.generate_mapping(create_tables=config.createTables)
 
+    app = FastAPI()
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+    return app
