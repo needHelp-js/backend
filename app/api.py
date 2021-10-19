@@ -9,4 +9,8 @@ def create_app(config: Config):
 
     app = FastAPI()
 
+    from app.games.endpoints import router as gameRouter
+
+    app.include_router(gameRouter)
+
     return app, db
