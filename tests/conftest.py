@@ -18,10 +18,12 @@ def app():
         }
     testConfig = TestConfig()
 
-    app = create_app(testConfig)
+    app, db = create_app(testConfig)
 
     yield app
 
+    db.schema = None
+    db.provider = None
     os.remove(testConfig.dbBind['filename'])
 
 @pytest.fixture

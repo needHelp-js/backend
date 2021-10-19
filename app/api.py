@@ -9,4 +9,4 @@ def create_app(config: Config):
 
     app = FastAPI()
 
-    return app
+    return app, db
