@@ -16,3 +16,4 @@ class Player(db.Entity):
     turnOrder = Optional(int)
     currentGame = Optional(Game, reverse='players')
     hostedGame = Optional(Game, reverse='host')
+
