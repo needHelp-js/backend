@@ -9,9 +9,12 @@ async def beginGame(idG:int, idP: int, response:Response):
     with db_session:
         game = Game.get(id=idG)
         player = Player.get(id=idP)
-        if (player is None or game is None):
+        if (game is None):
             response.status_code = status.HTTP_404_NOT_FOUND
-            return {'Error' : 'Jugador o partida no existentes'}
+            return {'Error' : 'Partida no existente'}
+        elif(player is None):
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {'Error' : 'Jugador no existente'}
         elif (game.host.id == player.id):
             if (game.started == False):
                 game.started = True

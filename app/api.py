@@ -12,4 +12,4 @@ def create_app(config: Config):
     from app.games.endpoints import router as gamesRouter
     app.include_router(gamesRouter)
 
-    return app
+    return app, db
