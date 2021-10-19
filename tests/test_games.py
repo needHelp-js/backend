@@ -1,6 +1,3 @@
-from fastapi import responses
-
-
 def test_nonExistentGame(client, data):
     response = client.patch("/games/3/begin/6")
     assert response.status_code == 404
