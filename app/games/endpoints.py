@@ -19,7 +19,6 @@ async def beginGame(idG:int, idP: int, response:Response):
                 return 1
             else:
                 response.status_code = status.HTTP_403_FORBIDDEN
-                game.started = False
                 return {'Error' : 'La partida ya empezó'} 
         else: 
             response.status_code = status.HTTP_403_FORBIDDEN
