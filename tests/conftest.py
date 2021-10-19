@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 from config import Config
 from app.api import create_app
-from pony.orm import db_session, commit
+from pony.orm import db_session 
 from app.models import Player, Game
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -19,10 +19,12 @@ def app():
         }
     testConfig = TestConfig()
 
-    app = create_app(testConfig)
+    app, db = create_app(testConfig)
 
     yield app
 
+    db.schema = None
+    db.provider = None
     os.remove(testConfig.dbBind['filename'])
 
 @pytest.fixture
@@ -35,4 +37,3 @@ def data():
         p4 = Player(id=4, nickname='p4', turnOrder=4)
         p5 = Player(id=5, nickname='p5', turnOrder=5)
         g4 = Game(id=4, name='g4', currentTurn=4, host=p4)
-        commit()
