@@ -19,7 +19,7 @@ class GameConnectionManager:
         """
         self._games[gameId] = {}
 
-    @classmethod
+    @staticmethod
     async def keepAlive(websocket: WebSocket):
         """Keeps websocket connections alive
 
