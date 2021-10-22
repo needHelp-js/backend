@@ -19,9 +19,18 @@ class GameConnectionManager:
         """
         self._games[gameId] = {}
 
-    async def connectPlayerToGame(
-        self, gameId: int, playerId: int, websocket: WebSocket
-    ):
+    @classmethod
+    async def keepAlive(websocket: WebSocket):
+        """Keeps websocket connections alive
+
+        Args:
+            websocket: connection to keep alive.
+        """
+
+        while True:
+            await websocket.receive()
+
+    def connectPlayerToGame(self, gameId: int, playerId: int, websocket: WebSocket):
         """Connects players to game and saves the connections.
 
         Args:
@@ -29,8 +38,6 @@ class GameConnectionManager:
             playerId: id of the player who wants to join.
             websocket: websocket connection to save.
         """
-
-        await websocket.accept()
 
         if gameId not in self._games:
             raise GameConnectionDoesNotExist(gameId)
@@ -40,7 +47,7 @@ class GameConnectionManager:
 
         self._games[gameId][playerId] = websocket
 
-    async def disconnectPlayerFromGame(self, gameId: int, playerId: int):
+    def disconnectPlayerFromGame(self, gameId: int, playerId: int):
         """Removes a player connection to a game and the game's entry if no player left.
 
         Args:
