@@ -63,7 +63,7 @@ class GameConnectionManager:
 
         del self._games[gameId][playerId]
 
-        if gameId not in self._games:
+        if len(self._games[gameId].keys()) == 0:
             del self._games[gameId]
 
     async def broadcastToGame(self, gameId: int, msg: Any):
