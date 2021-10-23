@@ -1,7 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocket
-from app.games.connections import GameConnectionManager
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected, PlayerNotConnected
 
 def test_connectPlayerToGame_success(app, gameManager):
@@ -63,7 +62,7 @@ def test_disconnectPlayerFromGame_success(app, gameManager):
 
     assert 1 not in gameManager._games
 
-def test_disconnectPlayerFromGame_raiseExceptions(app, gameManager):
+def test_disconnectPlayerFromGame_raiseExceptions(gameManager):
     
     with pytest.raises(GameConnectionDoesNotExist):
         gameManager.disconnectPlayerFromGame(1, 1)
