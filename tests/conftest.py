@@ -61,3 +61,9 @@ def data():
         g3.players.add(players[7:11])  # 4
         g4.players.add(players[11:17])  # 6
         g5.players.add(players[17:21])  # 4
+
+@pytest.fixture
+def gameNoPlayers():
+    with db_session:
+        p1 = Player(nickname="p1")
+        g1 = Game(name="g1", host=p1)
