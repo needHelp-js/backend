@@ -10,16 +10,10 @@ def test_getGames_success(client, data):
 
     assert response.status_code == 200
     assert response.json() == [
-        {
-            "id": 1,
-            "name": "g1",
-            "playerCount": 1
-        },{
-            "id": 5,
-            "name": "g5",
-            "playerCount": 4
-        }
+        {"id": 1, "name": "g1", "playerCount": 1},
+        {"id": 5, "name": "g5", "playerCount": 4},
     ]
+
 
 def test_getGames_no_games(client):
 

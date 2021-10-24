@@ -3,6 +3,7 @@ from config import Config
 from app.models import db
 from app.games.endpoints import router as gamesRouter
 
+
 def create_app(config: Config):
 
     db.bind(**config.dbBind)

@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Response
 from app.models import *
 
-router = APIRouter(prefix='/games')
+router = APIRouter(prefix="/games")
+
 
 @router.get("/")
 async def getGames():
@@ -11,8 +12,8 @@ async def getGames():
         gamesList = []
 
         for game in games:
-            gameDict = game.to_dict(['id', 'name'])
-            gameDict.update(playerCount = len(game.players))
+            gameDict = game.to_dict(["id", "name"])
+            gameDict.update(playerCount=len(game.players))
 
             gamesList.append(gameDict)
 
