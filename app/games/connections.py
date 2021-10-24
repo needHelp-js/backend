@@ -81,7 +81,7 @@ class GameConnectionManager:
             await conn.send_json(msg)
 
     async def sendToPlayer(self, gameId: int, playerId: int, msg: Any):
-        """Sends message to all players in a game.
+        """Sends message to a players in a game.
 
         Args:
             gameId: id of the game.
