@@ -37,7 +37,7 @@ def client(app):
 
 
 @pytest.fixture
-def data_listGames():
+def dataListGames():
     with db_session:
         players = []
         for i in range(21):
@@ -64,7 +64,7 @@ def data_listGames():
 
 
 @pytest.fixture
-def data_gameNoPlayers():
+def dataGameNoPlayers():
     with db_session:
         p1 = Player(nickname="p1")
         g1 = Game(name="g1", host=p1)
