@@ -71,5 +71,19 @@ def dataGameNoPlayers():
 
 
 @pytest.fixture
+def data():
+    with db_session:
+        players = []
+        for i in range(6):
+            players.append(Player(id=i, nickname=f"p{i}"))
+
+        g1 = Game(id=1, name="g1", host=players[0])
+
+        flush()
+
+        g1.players.add(players)  # 6
+
+
+@pytest.fixture
 def gameManager():
     return GameConnectionManager()
