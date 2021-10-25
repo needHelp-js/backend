@@ -1,6 +1,7 @@
 from app.games.endpoints import manager
 from starlette.websockets import WebSocket
 from fastapi.testclient import TestClient
+from app.games.events import DICE_ROLL_EVENT
 
 
 def test_nonExistentGame(client, data):
@@ -28,5 +29,5 @@ def test_rollDice(client, data):
     with client.websocket_connect("/games/1/ws/1") as websocket:
         response = client.get("/games/1/dice/1")
         assert response.status_code == 204
-        ans = websocket.receive_json()
+        ans = websocket.receive_json()["payload"]
         assert ans == 1 or ans == 2 or ans == 3 or ans == 4 or ans == 5 or ans == 6

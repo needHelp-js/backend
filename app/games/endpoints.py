@@ -4,7 +4,8 @@ from starlette.websockets import WebSocketDisconnect
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
 from app.games.connections import GameConnectionManager
 from random import randint
-
+from app.games.events import DICE_ROLL_EVENT
+from json import dumps
 
 router = APIRouter(prefix="/games")
 manager = GameConnectionManager()
@@ -22,8 +23,8 @@ async def getDice(gameID: int, playerID: int, response: Response):
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Jugador no existente"}
         elif game.currentTurn == player.turnOrder:
-            result = randint(1, 6)
-            await manager.broadcastToGame(gameID, result)
+            ans = randint(1, 6)
+            await manager.broadcastToGame(gameID, {"type" : DICE_ROLL_EVENT, "payload": ans})
             response.status_code = status.HTTP_204_NO_CONTENT
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
