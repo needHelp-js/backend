@@ -1,6 +1,7 @@
 import pytest
 import os
 from fastapi.testclient import TestClient
+from app.games.connections import GameConnectionManager
 
 from config import Config
 
@@ -29,3 +30,7 @@ def app():
 @pytest.fixture
 def client(app):
     return TestClient(app)
+
+@pytest.fixture
+def gameManager():
+    return GameConnectionManager()
