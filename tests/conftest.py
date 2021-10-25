@@ -1,6 +1,7 @@
 import pytest
 import os
 from fastapi.testclient import TestClient
+from app.games.connections import GameConnectionManager
 
 from config import Config
 from app.api import create_app
@@ -41,3 +42,7 @@ def data():
         p1 = Player(id=1, nickname="p1", turnOrder=1)
         p2 = Player(id=2, nickname="p2", turnOrder=2)
         g1 = Game(id=1, name="g1", currentTurn=1, host=p1)
+
+@pytest.fixture
+def gameManager():
+    return GameConnectionManager()
