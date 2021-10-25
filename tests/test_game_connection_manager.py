@@ -1,4 +1,3 @@
-import asyncio
 import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocket
@@ -103,26 +102,30 @@ def test_sendMessageToPlayer_raiseExceptions(app, gameManager):
     with client.websocket_connect('/wsTestRoute'):
         pass
 
-@pytest.mark.asyncio
-async def test_broadcastToGame_success(app, gameManager):
-    @app.websocket('/wsTestRoute{playerID}')
-    async def wsTestRoute(websocket: WebSocket, playerID : int):
+def test_broadcastToGame_success(app, gameManager):
+    gameManager.createGameConnection(1)
+
+    @app.websocket('/wsTestRoute')
+    async def wsTestRoute(websocket: WebSocket):
         await websocket.accept()
-        gameManager.createGameConnection(1)
-        gameManager.connectPlayerToGame(1, playerID, websocket)
-
-    async def clientFunction(playerID : int):
-        client = TestClient(app)
-        async with client.websocket_connect(f'/wsTestRoute{playerID}') as websocket:
-            data = await websocket.receive_json()
-            assert "msg" == data
+        gameManager.connectPlayerToGame(1, 1, websocket)
+        await gameManager.broadcastToGame(1, {"msg": "data"})   
     
-    #for playerID in range(1,4):
-    #    clientFunction(playerID)
+    client = TestClient(app)
 
-    tasks = [clientFunction(i) for i in range(4)]
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(asyncio.wait(tasks))
-    loop.close()
+    with client.websocket_connect('/wsTestRoute') as websocket:
+        data = websocket.receive_json()
+        assert {"msg": "data"} == data
 
-    await gameManager.broadcastToGame(1, "msg")
+def test_broadcastToGame_raiseExcpetions(app, gameManager):
+
+    @app.websocket('/wsTestRoute')
+    async def wsTestRoute(websocket: WebSocket):
+        await websocket.accept()
+        with pytest.raises(GameConnectionDoesNotExist):
+            await gameManager.broadcastToGame(1, {"msg": "data"})   
+    
+    client = TestClient(app)
+
+    with client.websocket_connect('/wsTestRoute'):
+        pass
