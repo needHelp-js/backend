@@ -1,12 +1,12 @@
-from pony.orm.core import db_session, flush
-import pytest
 import os
-from fastapi.testclient import TestClient
-from app.models import Game, Player
 
-from config import Config
-
+import pytest
 from app.api import create_app
+from app.games.connections import GameConnectionManager
+from app.models import Game, Player
+from config import Config
+from fastapi.testclient import TestClient
+from pony.orm.core import db_session, flush
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -62,8 +62,14 @@ def data():
         g4.players.add(players[11:17])  # 6
         g5.players.add(players[17:21])  # 4
 
+
 @pytest.fixture
 def gameNoPlayers():
     with db_session:
         p1 = Player(nickname="p1")
         g1 = Game(name="g1", host=p1)
+
+
+@pytest.fixture
+def gameManager():
+    return GameConnectionManager()
