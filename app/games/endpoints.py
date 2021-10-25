@@ -24,7 +24,10 @@ async def getDice(gameID: int, playerID: int, response: Response):
             return {"Error": "Jugador no existente"}
         elif game.currentTurn == player.turnOrder:
             ans = randint(1, 6)
-            await manager.broadcastToGame(gameID, {"type" : DICE_ROLL_EVENT, "payload": ans})
+            await manager.broadcastToGame(
+                gameID, {"type": DICE_ROLL_EVENT, "payload": ans}
+            )
+            game.incrementTurn()
             response.status_code = status.HTTP_204_NO_CONTENT
         else:
             response.status_code = status.HTTP_403_FORBIDDEN

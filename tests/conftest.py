@@ -5,7 +5,7 @@ from app.games.connections import GameConnectionManager
 
 from config import Config
 from app.api import create_app
-from pony.orm import db_session
+from pony.orm import db_session, flush
 from app.models import Player, Game
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -42,6 +42,9 @@ def data():
         p1 = Player(id=1, nickname="p1", turnOrder=1)
         p2 = Player(id=2, nickname="p2", turnOrder=2)
         g1 = Game(id=1, name="g1", currentTurn=1, host=p1)
+        flush()
+        g1.players = [p1, p2]
+
 
 @pytest.fixture
 def gameManager():
