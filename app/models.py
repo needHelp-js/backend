@@ -1,8 +1,9 @@
 from pony.orm import *
+from app.mixins import GameMixin
 
 db = Database()
 
-class Game(db.Entity):
+class Game(db.Entity, GameMixin):
     id = PrimaryKey(int, auto=True)
     name = Required(str, unique=True)
     started = Required(bool, default=False)
