@@ -47,6 +47,7 @@ def dataTirarDado():
         flush()
         g1.players = [p1, p2]
 
+
 @pytest.fixture
 def data():
     with db_session:

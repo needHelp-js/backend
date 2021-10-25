@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Response, status, APIRouter, WebSocket
+from fastapi import APIRouter, Response, status, WebSocket
 from app.models import *
 from starlette.websockets import WebSocketDisconnect
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
 from app.games.connections import GameConnectionManager
 from random import randint
 from app.games.events import DICE_ROLL_EVENT
-from json import dumps
+from pony.orm import db_session
+from pony.orm.core import flush
+
+from .schemas import CreateGameSchema
 
 router = APIRouter(prefix="/games")
 manager = GameConnectionManager()
@@ -32,6 +35,25 @@ async def getDice(gameID: int, playerID: int, response: Response):
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": "No es el turno del jugador"}
+
+
+@router.post("", status_code=status.HTTP_201_CREATED)
+def createGame(gameCreationData: CreateGameSchema, response: Response):
+    with db_session:
+        if Game.exists(name=gameCreationData.gameName):
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"Error": f"Partida {gameCreationData.gameName} ya existe"}
+
+        hostPlayer = Player(nickname=gameCreationData.hostNickname)
+        newGame = Game(name=gameCreationData.gameName, host=hostPlayer)
+
+        flush()
+
+        newGame.players.add(hostPlayer)
+
+        manager.createGameConnection(newGame.id)
+
+    return {"idPartida": newGame.id, "idHost": hostPlayer.id}
 
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
