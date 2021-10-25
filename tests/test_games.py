@@ -1,3 +1,4 @@
+from app.games.endpoints import manager
 from app.models import Game, Player
 from fastapi import status
 from pony.orm import db_session
@@ -27,6 +28,35 @@ def test_getGames_no_games(client):
 
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_getDice_nonExistentGame(client, dataTirarDado):
+    response = client.get("/games/5/dice/1")
+    assert response.status_code == 404
+    assert response.json() == {"Error": "Partida no existente"}
+
+
+def test_getDice_nonExistentPlayer(client, dataTirarDado):
+    response = client.get("/games/1/dice/6")
+    assert response.status_code == 404
+    assert response.json() == {"Error": "Jugador no existente"}
+
+
+def test_getDice_incorrectTurn(client, dataTirarDado):
+    response = client.get("/games/1/dice/2")
+    assert response.status_code == 403
+    assert response.json() == {"Error": "No es el turno del jugador"}
+
+
+def test_getDice_success(client, dataTirarDado):
+
+    manager.createGameConnection(1)
+
+    with client.websocket_connect("/games/1/ws/1") as websocket:
+        response = client.get("/games/1/dice/1")
+        assert response.status_code == 204
+        ans = websocket.receive_json()["payload"]
+        assert ans == 1 or ans == 2 or ans == 3 or ans == 4 or ans == 5 or ans == 6
 
 
 def test_createGame_success(client):

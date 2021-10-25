@@ -12,10 +12,9 @@ def create_app(config: Config):
     db.bind(**config.dbBind)
     db.generate_mapping(create_tables=config.createTables)
 
-    from app.games.endpoints import router as gamesRouter
-
     app = FastAPI()
-    app.include_router(gamesRouter)
+
+    from app.games.endpoints import router as gamesRouter
 
     app.add_middleware(
         CORSMiddleware,
@@ -24,5 +23,7 @@ def create_app(config: Config):
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    app.include_router(gamesRouter)
 
     return app, db

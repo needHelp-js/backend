@@ -6,6 +6,7 @@ from app.games.connections import GameConnectionManager
 from app.models import Game, Player
 from config import Config
 from fastapi.testclient import TestClient
+from pony.orm import db_session, flush
 from pony.orm.core import db_session, flush
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -68,6 +69,16 @@ def dataGameNoPlayers():
     with db_session:
         p1 = Player(nickname="p1")
         g1 = Game(name="g1", host=p1)
+
+
+@pytest.fixture
+def dataTirarDado():
+    with db_session:
+        p1 = Player(id=1, nickname="p1", turnOrder=1)
+        p2 = Player(id=2, nickname="p2", turnOrder=2)
+        g1 = Game(id=1, name="g1", currentTurn=1, host=p1)
+        flush()
+        g1.players = [p1, p2]
 
 
 @pytest.fixture
