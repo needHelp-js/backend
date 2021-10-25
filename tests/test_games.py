@@ -4,25 +4,25 @@ from pony.orm import db_session
 from app.models import Player, Game
 
 
-def test_nonExistentGame(client, dataTirarDado):
+def test_getDice_nonExistentGame(client, dataTirarDado):
     response = client.get("/games/5/dice/1")
     assert response.status_code == 404
     assert response.json() == {"Error": "Partida no existente"}
 
 
-def test_nonExistentPlayer(client, dataTirarDado):
+def test_getDice_nonExistentPlayer(client, dataTirarDado):
     response = client.get("/games/1/dice/6")
     assert response.status_code == 404
     assert response.json() == {"Error": "Jugador no existente"}
 
 
-def test_incorrectTurn(client, dataTirarDado):
+def test_getDice_incorrectTurn(client, dataTirarDado):
     response = client.get("/games/1/dice/2")
     assert response.status_code == 403
     assert response.json() == {"Error": "No es el turno del jugador"}
 
 
-def test_rollDice(client, dataTirarDado):
+def test_getDice_success(client, dataTirarDado):
 
     manager.createGameConnection(1)
 

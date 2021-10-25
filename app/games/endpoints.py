@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Response, status, WebSocket
-from app.models import *
+from app.models import Game, Player
 from starlette.websockets import WebSocketDisconnect
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
 from app.games.connections import GameConnectionManager

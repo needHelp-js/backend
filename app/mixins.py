@@ -1,7 +1,6 @@
 class GameMixin(object):
     def countPlayers(self):
         l = len(self.players)
-        print(l)
         return l
 
     def incrementTurn(self):
