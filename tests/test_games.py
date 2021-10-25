@@ -4,7 +4,7 @@ from pony.orm import db_session
 from app.models import Player, Game
 
 
-def test_getGames_success(client, data):
+def test_getGames_success(client, data_listGames):
 
     response = client.get("/games")
 
@@ -14,7 +14,7 @@ def test_getGames_success(client, data):
         {"id": 5, "name": "g5", "playerCount": 4},
     ]
 
-def test_getGames_game_with_no_players(client, gameNoPlayers):
+def test_getGames_game_with_no_players(client, data_gameNoPlayers):
     response = client.get("/games")
 
     assert response.status_code == 200
