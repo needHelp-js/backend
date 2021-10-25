@@ -6,6 +6,7 @@ from app.games.exceptions import (
     PlayerAlreadyConnected,
     PlayerNotConnected,
 )
+from app.games.endpoints import manager
 
 
 def test_connectPlayerToGame_success(app, gameManager):
@@ -137,3 +138,27 @@ def test_broadcastToGame_raiseExcpetions(app, gameManager):
 
     with client.websocket_connect("/wsTestRoute"):
         pass
+
+
+def test_createWebsocketConnection(app, gameManager):
+    @app.websocket("/wsTestRoute")
+    async def wsTestRoute(websocket: WebSocket):
+        await websocket.accept()
+        manager.createGameConnection(1)
+
+    client = TestClient(app)
+
+    with client.websocket_connect("/games/1/ws/1") as websocket:
+        data = websocket.receive_json()
+        assert data == {"Error": "Conexión a la partida 1 no existe"}
+
+    with client.websocket_connect("/wsTestRoute") as websocket:
+        manager.connectPlayerToGame(1, 1, websocket)
+
+    with client.websocket_connect("/games/1/ws/1") as websocket:
+        data = websocket.receive_json()
+        assert data == {
+            "Error": "Jugador 1 ya tiene una conexión activa a la partida 1"
+        }
+
+    assert 1 not in manager._games

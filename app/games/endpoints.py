@@ -1,3 +1,4 @@
+from typing import final
 from fastapi import APIRouter, WebSocket
 from starlette.websockets import WebSocketDisconnect
 
@@ -14,19 +15,22 @@ async def createWebsocketConnection(gameId: int, playerId: int, websocket: WebSo
     await websocket.accept()
 
     try:
-        manager.connectPlayerToGame(gameId, playerId, websocket)
-        await GameConnectionManager.keepAlive(websocket)
-    except GameConnectionDoesNotExist:
-        await websocket.send_json(
-            {"Error": f"Conexión a la partida {gameId} no existe"}
-        )
-        await websocket.close(4404)
-    except PlayerAlreadyConnected:
-        await websocket.send_json(
-            {
-                "Error": f"Jugador {playerId} ya tiene una conexión activa a la partida {gameId}"
-            }
-        )
-        await websocket.close(4409)
+        try:
+            manager.connectPlayerToGame(gameId, playerId, websocket)
+            await GameConnectionManager.keepAlive(websocket)
+        except GameConnectionDoesNotExist:
+            await websocket.send_json(
+                {"Error": f"Conexión a la partida {gameId} no existe"}
+            )
+            await websocket.close(4404)
+        except PlayerAlreadyConnected:
+            await websocket.send_json(
+                {
+                    "Error": f"Jugador {playerId} ya tiene una conexión activa a la partida {gameId}"
+                }
+            )
+            await websocket.close(4409)
+            raise WebSocketDisconnect
+
     except WebSocketDisconnect:
         manager.disconnectPlayerFromGame(gameId, playerId)

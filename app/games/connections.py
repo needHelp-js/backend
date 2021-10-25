@@ -1,10 +1,12 @@
 from typing import Any, Dict
 from fastapi import WebSocket
+from starlette.websockets import WebSocketDisconnect, WebSocketState
 from .exceptions import (
     GameConnectionDoesNotExist,
     PlayerAlreadyConnected,
     PlayerNotConnected,
 )
+import asyncio
 
 
 class GameConnectionManager:
@@ -28,7 +30,7 @@ class GameConnectionManager:
         """
 
         while True:
-            await websocket.receive()
+            await websocket.receive_text()
 
     def connectPlayerToGame(self, gameId: int, playerId: int, websocket: WebSocket):
         """Connects players to game and saves the connections.

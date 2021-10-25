@@ -16,7 +16,5 @@ class PlayerAlreadyConnected(MisterioBaseException):
 
 class PlayerNotConnected(MisterioBaseException):
     def __init__(self, gameId: int, playerId: int):
-        message: str = (
-            f"can't disconnect player {playerId} from game {gameId}, not connected"
-        )
+        message: str = f"Player {playerId} from game {gameId} not connected to the game"
         super().__init__(message)
