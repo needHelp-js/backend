@@ -1,6 +1,6 @@
 class GameMixin(object):
     def setPlayersTurnOrder(self):
-        currentTurn = 1
+        turnToAssign = 1
         for player in self.players:
-            player.turnOrder = currentTurn
-            currentTurn += 1
+            player.turnOrder = turnToAssign
+            turnToAssign += 1
