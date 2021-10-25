@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from config import Config
 from app.models import db
-from app.games.endpoints import router as games_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,7 +14,9 @@ def create_app(config: Config):
 
     app = FastAPI()
 
-    app.include_router(games_router)
+    from app.games.endpoints import router as gameRouter
+
+    app.include_router(gameRouter)
 
     app.add_middleware(
         CORSMiddleware,
