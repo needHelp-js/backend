@@ -1,8 +1,8 @@
-from pony.orm.core import flush
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
 from app.models import Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
+from pony.orm.core import flush
 from starlette.websockets import WebSocketDisconnect
 
 from .connections import GameConnectionManager
@@ -20,7 +20,7 @@ def createGame(gameCreationData: CreateGameSchema, response: Response):
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"Error": f"Partida {gameCreationData.gameName} ya existe"}
 
-        hostPlayer = Player(nickname=gameCreationData.hostNickname, turnOrder=0)
+        hostPlayer = Player(nickname=gameCreationData.hostNickname)
         newGame = Game(name=gameCreationData.gameName, host=hostPlayer)
 
         flush()
