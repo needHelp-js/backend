@@ -14,9 +14,7 @@ def create_app(config: Config):
 
     app = FastAPI()
 
-    from app.games.endpoints import router as gameRouter
-
-    app.include_router(gameRouter)
+    from app.games.endpoints import router as gamesRouter
 
     app.add_middleware(
         CORSMiddleware,
@@ -25,5 +23,7 @@ def create_app(config: Config):
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    app.include_router(gamesRouter)
 
     return app, db
