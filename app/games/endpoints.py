@@ -2,7 +2,7 @@ from fastapi import APIRouter, Response, status, APIRouter, WebSocket
 from app.models import *
 from starlette.websockets import WebSocketDisconnect
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
-from .connections import GameConnectionManager
+from app.games.connections import GameConnectionManager
 from random import randint
 
 
@@ -22,7 +22,9 @@ async def getDice(gameID: int, playerID: int, response: Response):
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Jugador no existente"}
         elif game.currentTurn == player.turnOrder:
-            return randint(1, 6)
+            result = randint(1, 6)
+            await manager.broadcastToGame(gameID, result)
+            response.status_code = status.HTTP_204_NO_CONTENT
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": "No es el turno del jugador"}

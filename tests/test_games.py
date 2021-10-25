@@ -1,3 +1,8 @@
+from app.games.endpoints import manager
+from starlette.websockets import WebSocket
+from fastapi.testclient import TestClient
+
+
 def test_nonExistentGame(client, data):
     response = client.get("/games/5/dice/1")
     assert response.status_code == 404
@@ -17,13 +22,11 @@ def test_incorrectTurn(client, data):
 
 
 def test_rollDice(client, data):
-    response = client.get("/games/1/dice/1")
-    assert response.status_code == 200
-    assert (
-        response.json() == 1
-        or response.json() == 2
-        or response.json() == 3
-        or response.json() == 4
-        or response.json() == 5
-        or response.json() == 6
-    )
+
+    manager.createGameConnection(1)
+
+    with client.websocket_connect("/games/1/ws/1") as websocket:
+        response = client.get("/games/1/dice/1")
+        assert response.status_code == 204
+        ans = websocket.receive_json()
+        assert ans == 1 or ans == 2 or ans == 3 or ans == 4 or ans == 5 or ans == 6
