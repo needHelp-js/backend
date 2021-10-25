@@ -2,6 +2,7 @@ from pony.orm import db_session
 
 from app.models import Game
 
+
 def test_setPlayerTurnOrder_success(app, data):
     with db_session:
         g1 = Game[1]
