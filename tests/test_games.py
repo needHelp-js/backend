@@ -1,28 +1,25 @@
 from app.games.endpoints import manager
-from starlette.websockets import WebSocket
-from fastapi.testclient import TestClient
-from app.games.events import DICE_ROLL_EVENT
 
 
-def test_nonExistentGame(client, data):
+def test_nonExistentGame(client, dataTirarDado):
     response = client.get("/games/5/dice/1")
     assert response.status_code == 404
     assert response.json() == {"Error": "Partida no existente"}
 
 
-def test_nonExistentPlayer(client, data):
+def test_nonExistentPlayer(client, dataTirarDado):
     response = client.get("/games/1/dice/6")
     assert response.status_code == 404
     assert response.json() == {"Error": "Jugador no existente"}
 
 
-def test_incorrectTurn(client, data):
+def test_incorrectTurn(client, dataTirarDado):
     response = client.get("/games/1/dice/2")
     assert response.status_code == 403
     assert response.json() == {"Error": "No es el turno del jugador"}
 
 
-def test_rollDice(client, data):
+def test_rollDice(client, dataTirarDado):
 
     manager.createGameConnection(1)
 

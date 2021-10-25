@@ -37,7 +37,7 @@ def client(app):
 
 
 @pytest.fixture
-def data():
+def dataTirarDado():
     with db_session:
         p1 = Player(id=1, nickname="p1", turnOrder=1)
         p2 = Player(id=2, nickname="p2", turnOrder=2)
