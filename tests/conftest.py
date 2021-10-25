@@ -3,6 +3,7 @@ import pytest
 import os
 from fastapi.testclient import TestClient
 from app.models import Game, Player
+from app.games.connections import GameConnectionManager
 
 from config import Config
 
@@ -48,3 +49,6 @@ def data():
         flush()
 
         g1.players.add(players)  # 6
+@pytest.fixture
+def gameManager():
+    return GameConnectionManager()
