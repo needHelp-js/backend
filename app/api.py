@@ -1,8 +1,8 @@
-from fastapi import FastAPI
 from config import Config
-from app.models import db
-
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.models import db
 
 origins = ["*"]
 

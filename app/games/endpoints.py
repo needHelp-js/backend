@@ -1,17 +1,36 @@
-from fastapi import APIRouter, Response, status, WebSocket
-from app.models import Game, Player
-from starlette.websockets import WebSocketDisconnect
-from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
-from app.games.connections import GameConnectionManager
 from random import randint
+from typing import List
+
+from app.games.connections import GameConnectionManager
 from app.games.events import DICE_ROLL_EVENT
+from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
+from app.games.schemas import AvailableGameSchema
+from app.models import Game, Player
+from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
 from pony.orm.core import flush
+from starlette.websockets import WebSocketDisconnect
 
 from .schemas import CreateGameSchema
 
 router = APIRouter(prefix="/games")
 manager = GameConnectionManager()
+
+
+@router.get("", response_model=List[AvailableGameSchema])
+async def getGames():
+    with db_session:
+        games = Game.select(lambda p: len(p.players) < 6 and p.started == False)[:]
+
+        gamesList = []
+
+        for game in games:
+            gameDict = game.to_dict(["id", "name"])
+            gameDict.update(playerCount=len(game.players))
+
+            gamesList.append(gameDict)
+
+        return gamesList
 
 
 @router.get("/{gameID}/dice/{playerID}")

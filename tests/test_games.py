@@ -1,7 +1,33 @@
 from app.games.endpoints import manager
+from app.models import Game, Player
 from fastapi import status
 from pony.orm import db_session
-from app.models import Player, Game
+
+
+def test_getGames_success(client, dataListGames):
+
+    response = client.get("/games")
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {"id": 1, "name": "g1", "playerCount": 1},
+        {"id": 5, "name": "g5", "playerCount": 4},
+    ]
+
+
+def test_getGames_game_with_no_players(client, dataGameNoPlayers):
+    response = client.get("/games")
+
+    assert response.status_code == 200
+    assert response.json() == [{"id": 1, "name": "g1", "playerCount": 0}]
+
+
+def test_getGames_no_games(client):
+
+    response = client.get("/games")
+
+    assert response.status_code == 200
+    assert response.json() == []
 
 
 def test_getDice_nonExistentGame(client, dataTirarDado):
