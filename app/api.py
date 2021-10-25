@@ -8,7 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 origins = ["*"]
 
 
-
 def create_app(config: Config):
 
     db.bind(**config.dbBind)

@@ -49,6 +49,8 @@ def data():
         flush()
 
         g1.players.add(players)  # 6
+
+
 @pytest.fixture
 def gameManager():
     return GameConnectionManager()
