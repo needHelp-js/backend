@@ -1,3 +1,4 @@
+from pony.orm.core import flush
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
 from app.models import Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
@@ -21,6 +22,9 @@ def createGame(gameCreationData: CreateGameSchema, response: Response):
 
         hostPlayer = Player(nickname=gameCreationData.hostNickname, turnOrder=0)
         newGame = Game(name=gameCreationData.gameName, host=hostPlayer)
+
+        flush()
+
         newGame.players.add(hostPlayer)
 
         manager.createGameConnection(newGame.id)

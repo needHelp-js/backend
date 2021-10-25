@@ -16,6 +16,10 @@ def test_createGame_success(client):
     with db_session:
         game = Game.get(name=gameName)
         player = Player.get(nickname=hostNickname)
+
+        playerCount = len(game.players)
+        assert playerCount == 1
+
     assert response.json() == {"idPartida": game.id, "idHost": player.id}
 
 
