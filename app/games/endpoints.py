@@ -99,7 +99,7 @@ async def getDice(gameID: int, playerID: int, response: Response):
             return {"Error": "No es el turno del jugador"}
 
 
-@router.patch("/{gameId}", status_code=status.HTTP_204_NO_CONTENT)
+@router.patch("/{gameId}/join")
 async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response):
     with db_session:
 
@@ -139,6 +139,8 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
                 "payload": {"playerId": player.id, "playerNickname": player.nickname},
             },
         )
+
+        return {"playerId": player.id}
 
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
