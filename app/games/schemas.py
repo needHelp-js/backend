@@ -11,5 +11,6 @@ class CreateGameSchema(BaseModel):
     gameName: str
     hostNickname: str
 
+
 class joinGameSchema(BaseModel):
     playerNickname: str
