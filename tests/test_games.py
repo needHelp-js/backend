@@ -1,4 +1,5 @@
 from app.games.endpoints import manager
+from app.games.events import PLAYER_JOINED_EVENT
 from app.models import Game, Player
 from fastapi import status
 from pony.orm import db_session
@@ -127,3 +128,53 @@ def test_getDice_success(client, dataTirarDado):
         assert response.status_code == 204
         ans = websocket.receive_json()["payload"]
         assert ans == 1 or ans == 2 or ans == 3 or ans == 4 or ans == 5 or ans == 6
+
+
+def test_joinGame_success(client, dataGameNoPlayers):
+
+    manager.createGameConnection(1)
+
+    with client.websocket_connect("/games/1/ws/2") as websocket:
+        response = client.patch("/games/1/join", json={"playerNickname": "p2"})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {"playerId": 2}
+
+        data = websocket.receive_json()
+        with db_session:
+            player = Player.get(nickname="p2")
+            assert data == {
+                "type": PLAYER_JOINED_EVENT,
+                "payload": {"playerId": player.id, "playerNickname": player.nickname},
+            }
+
+
+def test_joinGame_failure_gameDoesntExist(client):
+
+    response = client.patch("/games/1/join", json={"playerNickname": "p2"})
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {"Error": "Partida 1 no existe."}
+
+
+def test_joinGame_failure_playerAlreadyInGame(client, dataListGames):
+
+    response = client.patch("/games/1/join", json={"playerNickname": "p0"})
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {"Error": "Jugador p0 ya se encuentra en la partida 1"}
+
+
+def test_joinGame_failure_gameStarted(client, dataListGames):
+
+    response = client.patch("/games/3/join", json={"playerNickname": "player_test"})
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {"Error": "La partida 3 ya esta empezada."}
+
+
+def test_joinGame_failure_gameIsFull(client, dataListGames):
+
+    response = client.patch("/games/2/join", json={"playerNickname": "player_test"})
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {"Error": "La partida 2 ya esta llena."}

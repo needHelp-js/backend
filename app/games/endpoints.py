@@ -2,16 +2,14 @@ from random import randint
 from typing import List
 
 from app.games.connections import GameConnectionManager
-from app.games.events import DICE_ROLL_EVENT, BEGIN_GAME_EVENT
+from app.games.events import BEGIN_GAME_EVENT, DICE_ROLL_EVENT, PLAYER_JOINED_EVENT
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
-from app.games.schemas import AvailableGameSchema
+from app.games.schemas import AvailableGameSchema, CreateGameSchema, joinGameSchema
 from app.models import Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
 from pony.orm.core import flush
 from starlette.websockets import WebSocketDisconnect
-
-from .schemas import CreateGameSchema
 
 router = APIRouter(prefix="/games")
 manager = GameConnectionManager()
@@ -99,6 +97,50 @@ async def getDice(gameID: int, playerID: int, response: Response):
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": "No es el turno del jugador"}
+
+
+@router.patch("/{gameId}/join")
+async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response):
+    with db_session:
+
+        game = Game.get(id=gameId)
+
+        if game is None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": f"Partida {gameId} no existe."}
+
+        players = [p for p in game.players if p.nickname == joinGameData.playerNickname]
+
+        if len(players) > 0:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {
+                "Error": f"Jugador {joinGameData.playerNickname}"
+                f" ya se encuentra en la partida {gameId}"
+            }
+
+        if game.started:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": f"La partida {gameId} ya esta empezada."}
+
+        if game.countPlayers() == 6:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": f"La partida {gameId} ya esta llena."}
+
+        player = Player(nickname=joinGameData.playerNickname)
+
+        flush()
+
+        game.players.add(player)
+
+        await manager.broadcastToGame(
+            game.id,
+            {
+                "type": PLAYER_JOINED_EVENT,
+                "payload": {"playerId": player.id, "playerNickname": player.nickname},
+            },
+        )
+
+        return {"playerId": player.id}
 
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
