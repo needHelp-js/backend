@@ -1,6 +1,13 @@
 from pony.orm import db_session
+from app.mixins import GameMixin
 from app.models import Game
 
+def test_startGame(app, beginGameData):
+    with db_session:
+        g1 = Game[1]
+        g1.startGame()
+        assert g1.currentTurn == 1
+        assert g1.started == True
 
 def test_countPlayers(app, dataTirarDado):
     with db_session:

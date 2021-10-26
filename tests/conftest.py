@@ -110,6 +110,6 @@ def beginGameData():
     with db_session:
         p1 = Player(id=1, nickname="p1", turnOrder=1)
         p2 = Player(id=2, nickname="p2", turnOrder=2)
-        g1 = Game(id=1, name="g1", currentTurn=1, host=p1)
+        g1 = Game(id=1, name="g1", currentTurn=0, host=p1)
         g2 = Game(id=2, name="g2", started=True, currentTurn=2, host=p2)
     commit()

@@ -15,3 +15,8 @@ class GameMixin(object):
         for player in self.players:
             player.turnOrder = turnToAssign
             turnToAssign += 1
+
+    def startGame(self):
+        self.currentTurn = 1
+        self.setPlayersTurnOrder()
+        self.started = True
