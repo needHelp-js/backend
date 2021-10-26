@@ -1,4 +1,5 @@
 from app.games.endpoints import manager
+from app.games.events import PLAYER_JOINED_EVENT
 from app.models import Game, Player
 from fastapi import status
 from pony.orm import db_session
@@ -91,3 +92,20 @@ def test_createGame_failure_game_already_exists(client):
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "Error" in response.json()
+
+
+def test_joinGame_success(client, dataGameNoPlayers):
+
+    manager.createGameConnection(1)
+
+    with client.websocket_connect("/games/1/ws/2") as websocket:
+        response = client.patch("/games/1", json={"playerNickname": "p2"})
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        data = websocket.receive_json()
+        with db_session:
+            player = Player.get(nickname="p2")
+            assert data == {
+                "type": PLAYER_JOINED_EVENT,
+                "payload": {"playerId": player.id, "playerNickname": player.nickname},
+            }
