@@ -161,3 +161,19 @@ def test_joinGame_failure_playerAlreadyInGame(client, dataListGames):
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json() == {"Error": "Jugador p0 ya se encuentra en la partida 1"}
+
+
+def test_joinGame_failure_gameStarted(client, dataListGames):
+
+    response = client.patch("/games/3", json={"playerNickname": "player_test"})
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {"Error": "La partida 3 ya esta empezada."}
+
+
+def test_joinGame_failure_gameIsFull(client, dataListGames):
+
+    response = client.patch("/games/2", json={"playerNickname": "player_test"})
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {"Error": "La partida 2 ya esta llena."}
