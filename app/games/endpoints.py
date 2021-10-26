@@ -11,7 +11,8 @@ from pony.orm import db_session
 from pony.orm.core import flush
 from starlette.websockets import WebSocketDisconnect
 
-from .schemas import CreateGameSchema
+from .schemas import CreateGameSchema, joinGameSchema
+from .events import PLAYER_JOINED_EVENT
 
 router = APIRouter(prefix="/games")
 manager = GameConnectionManager()
@@ -73,6 +74,48 @@ def createGame(gameCreationData: CreateGameSchema, response: Response):
         manager.createGameConnection(newGame.id)
 
     return {"idPartida": newGame.id, "idHost": hostPlayer.id}
+
+
+@router.patch("/{gameId}", status_code=status.HTTP_204_NO_CONTENT)
+async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response):
+    with db_session:
+
+        game = Game.get(id=gameId)
+
+        if game is None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": f"Partida {gameId} no existe."}
+
+        players = [p for p in game.players if p.id == 1]
+
+        if len(players) > 0:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {
+                "Error": f"Jugador {joinGameData.playerNickname}"
+                f"ya se encuentra en la partida {gameId}"
+            }
+
+        if game.started:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": f"La partida {gameId} ya esta empezada."}
+
+        if game.countPlayers() == 6:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": f"La partida {gameId} ya esta llena."}
+
+        player = Player(nickname=joinGameData.playerNickname)
+
+        flush()
+
+        game.players.add(player)
+
+        await manager.broadcastToGame(
+            game.id,
+            {
+                "type": PLAYER_JOINED_EVENT,
+                "payload": {"playerId": player.id, "playerNickname": player.nickname},
+            },
+        )
 
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
