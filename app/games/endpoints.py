@@ -86,13 +86,13 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": f"Partida {gameId} no existe."}
 
-        players = [p for p in game.players if p.id == 1]
+        players = [p for p in game.players if p.nickname == joinGameData.playerNickname]
 
         if len(players) > 0:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {
                 "Error": f"Jugador {joinGameData.playerNickname}"
-                f"ya se encuentra en la partida {gameId}"
+                f" ya se encuentra en la partida {gameId}"
             }
 
         if game.started:

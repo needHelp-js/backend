@@ -109,3 +109,19 @@ def test_joinGame_success(client, dataGameNoPlayers):
                 "type": PLAYER_JOINED_EVENT,
                 "payload": {"playerId": player.id, "playerNickname": player.nickname},
             }
+
+
+def test_joinGame_failure_gameDoesntExist(client):
+
+    response = client.patch("/games/1", json={"playerNickname": "p2"})
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {"Error": "Partida 1 no existe."}
+
+
+def test_joinGame_failure_playerAlreadyInGame(client, dataListGames):
+
+    response = client.patch("/games/1", json={"playerNickname": "p0"})
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {"Error": "Jugador p0 ya se encuentra en la partida 1"}
