@@ -2,7 +2,7 @@ from random import randint
 from typing import List
 
 from app.games.connections import GameConnectionManager
-from app.games.events import DICE_ROLL_EVENT
+from app.games.events import DICE_ROLL_EVENT, BEGIN_GAME_EVENT
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
 from app.games.schemas import AvailableGameSchema
 from app.models import Game, Player
@@ -15,6 +15,25 @@ from .schemas import CreateGameSchema
 
 router = APIRouter(prefix="/games")
 manager = GameConnectionManager()
+
+
+@router.post("", status_code=status.HTTP_201_CREATED)
+def createGame(gameCreationData: CreateGameSchema, response: Response):
+    with db_session:
+        if Game.exists(name=gameCreationData.gameName):
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"Error": f"Partida {gameCreationData.gameName} ya existe"}
+
+        hostPlayer = Player(nickname=gameCreationData.hostNickname)
+        newGame = Game(name=gameCreationData.gameName, host=hostPlayer)
+
+        flush()
+
+        newGame.players.add(hostPlayer)
+
+        manager.createGameConnection(newGame.id)
+
+    return {"idPartida": newGame.id, "idHost": hostPlayer.id}
 
 
 @router.get("", response_model=List[AvailableGameSchema])
@@ -31,6 +50,32 @@ async def getGames():
             gamesList.append(gameDict)
 
         return gamesList
+
+
+@router.patch("/{gameID}/begin/{playerID}")
+async def beginGame(gameID: int, playerID: int, response: Response):
+    with db_session:
+        game = Game.get(id=gameID)
+        player = Player.get(id=playerID)
+        if game is None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": "Partida no existente"}
+        elif player is None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": "Jugador no existente"}
+        elif game.host.id == player.id:
+            if game.started == False:
+                game.startGame()
+                response.status_code = status.HTTP_204_NO_CONTENT
+                await manager.broadcastToGame(
+                    gameID, {"type": BEGIN_GAME_EVENT, "payload": None}
+                )
+            else:
+                response.status_code = status.HTTP_403_FORBIDDEN
+                return {"Error": "La partida ya empezó"}
+        else:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": "El jugador no es el host"}
 
 
 @router.get("/{gameID}/dice/{playerID}")
@@ -54,25 +99,6 @@ async def getDice(gameID: int, playerID: int, response: Response):
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": "No es el turno del jugador"}
-
-
-@router.post("", status_code=status.HTTP_201_CREATED)
-def createGame(gameCreationData: CreateGameSchema, response: Response):
-    with db_session:
-        if Game.exists(name=gameCreationData.gameName):
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return {"Error": f"Partida {gameCreationData.gameName} ya existe"}
-
-        hostPlayer = Player(nickname=gameCreationData.hostNickname)
-        newGame = Game(name=gameCreationData.gameName, host=hostPlayer)
-
-        flush()
-
-        newGame.players.add(hostPlayer)
-
-        manager.createGameConnection(newGame.id)
-
-    return {"idPartida": newGame.id, "idHost": hostPlayer.id}
 
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
