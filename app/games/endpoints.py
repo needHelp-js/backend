@@ -61,6 +61,11 @@ async def beginGame(gameID: int, playerID: int, response: Response):
         elif player is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Jugador no existente"}
+        elif game.countPlayers() <= 1:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {
+                "Error": "La partida no tiene la cantidad de jugadores suficientes como para ser iniciada"
+            }
         elif game.host.id == player.id:
             if game.started == False:
                 game.startGame()
