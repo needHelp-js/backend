@@ -178,3 +178,60 @@ def test_joinGame_failure_gameIsFull(client, dataListGames):
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json() == {"Error": "La partida 2 ya esta llena."}
+
+
+def test_getGameDetails_gameDoesntExist(client, dataListGames):
+
+    response = client.get("/games/6")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {"Error": "Partida 6 no existe."}
+
+
+def test_getGameDetails_success(client, dataListGames):
+
+    response = client.get("/games/1")
+
+    assert response.json() == {
+        "id": 1,
+        "name": "g1",
+        "started": False,
+        "currentTurn": 0,
+        "players": [{"id": 0, "nickname": "p0", "turnOrder": None}],
+        "host": {"id": 0, "nickname": "p0", "turnOrder": None},
+    }
+
+
+def test_getGameDetails_startedGame(client, dataListGames):
+
+    with db_session:
+        g1 = Game[1]
+        g1.startGame()
+
+    response = client.get("/games/1")
+
+    assert response.json() == {
+        "id": 1,
+        "name": "g1",
+        "started": True,
+        "currentTurn": 1,
+        "players": [{"id": 0, "nickname": "p0", "turnOrder": 1}],
+        "host": {"id": 0, "nickname": "p0", "turnOrder": 1},
+    }
+
+
+def test_getGameDetails_multiplePlayers(client, dataTirarDado):
+
+    response = client.get("/games/1")
+
+    assert response.json() == {
+        "id": 1,
+        "name": "g1",
+        "started": False,
+        "currentTurn": 1,
+        "players": [
+            {"id": 1, "nickname": "p1", "turnOrder": 1},
+            {"id": 2, "nickname": "p2", "turnOrder": 2},
+        ],
+        "host": {"id": 1, "nickname": "p1", "turnOrder": 1},
+    }
