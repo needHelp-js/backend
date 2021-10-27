@@ -111,5 +111,14 @@ def beginGameData():
         p1 = Player(id=1, nickname="p1", turnOrder=1)
         p2 = Player(id=2, nickname="p2", turnOrder=2)
         g1 = Game(id=1, name="g1", currentTurn=0, host=p1)
-        g2 = Game(id=2, name="g2", started=True, currentTurn=2, host=p2)
-    commit()
+        p3 = Player(id=3, nickname="p3", turnOrder=1)
+        p4 = Player(id=4, nickname="p4", turnOrder=2)
+        g2 = Game(id=2, name="g2", started=True, currentTurn=2, host=p3)
+        p5 = Player(id=5, nickname="p5", turnOrder=1)
+        g3 = Game(id=3, name="g3", currentTurn=0, host=p5)
+
+        flush()
+
+        g1.players.add([p1, p2])
+        g2.players.add([p3, p4])
+        g3.players.add(p5)

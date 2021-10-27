@@ -67,7 +67,7 @@ def test_getGames_no_games(client):
 
 
 def test_beginGame_nonExistentGame(client, beginGameData):
-    response = client.patch("/games/3/begin/6")
+    response = client.patch("/games/4/begin/6")
     assert response.status_code == 404
     assert response.json() == {"Error": "Partida no existente"}
 
@@ -78,6 +78,14 @@ def test_beginGame_nonExistentPlayer(client, beginGameData):
     assert response.json() == {"Error": "Jugador no existente"}
 
 
+def test_beginGame_notEnoughPlayers(client, beginGameData):
+    response = client.patch("/games/3/begin/5")
+    assert response.status_code == 403
+    assert response.json() == {
+        "Error": "La partida no tiene la cantidad de jugadores suficientes como para ser iniciada"
+    }
+
+
 def test_beginGame_playerIsNotHost(client, beginGameData):
     response = client.patch("/games/1/begin/2")
     assert response.status_code == 403
@@ -85,7 +93,7 @@ def test_beginGame_playerIsNotHost(client, beginGameData):
 
 
 def test_beginGame_gameAlreadyStarted(client, beginGameData):
-    response = client.patch("/games/2/begin/2")
+    response = client.patch("/games/2/begin/3")
     assert response.status_code == 403
     assert response.json() == {"Error": "La partida ya empezó"}
 
