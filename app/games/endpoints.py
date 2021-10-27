@@ -143,6 +143,26 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
         return {"playerId": player.id}
 
 
+@router.get("/{gameId}")
+async def getGameDetails(gameId: int, response: Response):
+    with db_session:
+
+        game = Game.get(id=gameId)
+
+        if game is None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": f"Partida {gameId} no existe."}
+
+        dict = game.to_dict(related_objects=True, with_collections=True)
+        excluded_fields = ["hostedGame", "currentGame"]
+
+        dict["players"] = [p.to_dict(exclude=excluded_fields) for p in dict["players"]]
+
+        dict["host"] = dict["host"].to_dict(exclude=excluded_fields)
+
+        return dict
+
+
 @router.websocket("/games/{gameId}/ws/{playerId}")
 async def createWebsocketConnection(gameId: int, playerId: int, websocket: WebSocket):
     await websocket.accept()
