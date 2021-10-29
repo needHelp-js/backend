@@ -52,9 +52,3 @@ class Card(db.Entity):
     game = Optional(Game)
     isInEnvelope = Optional(bool)
     player = Optional(Player)
-
-
-db.bind(
-    "sqlite", "db.sqlite", create_db=True
-)  # Conectamos el objeto `db` con la base de dato.
-db.generate_mapping(create_tables=True)  # Generamos las base de datos.
