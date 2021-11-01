@@ -49,6 +49,6 @@ class Card(db.Entity):
     id = PrimaryKey(int, auto=True)
     type = Required(str, py_check=checkCardType)
     name = Required(str, py_check=checkCardName)
-    game = Optional(Game)
-    isInEnvelope = Optional(bool)
+    game = Required(Game)
+    isInEnvelope = Required(bool, default=False)
     player = Optional(Player)
