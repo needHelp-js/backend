@@ -1,0 +1,305 @@
+from typing import Tuple, List
+from app.models import Player
+
+
+class Room:
+    def __init__(self, id, entries):
+        self.id = id
+        self.entries = entries
+
+
+class BoardManager:
+    def __init__(self):
+        self._board = [[]]
+        self._rooms = []
+        self._boardTuples = {}
+        self._boardId = [[]]
+
+    def createBoard(self):
+        self._board = [["*" for x in range(20)] for y in range(20)]
+        for y in range(20):
+            self._board[y][6] = "."
+            self._board[y][13] = "."
+
+        for x in range(20):
+            self._board[6][x] = "."
+            self._board[13][x] = "."
+
+        # Entradas a recintos
+        self._board[2][6] = "#"
+        self._board[10][6] = "#"
+        self._board[15][6] = "#"
+        self._board[4][13] = "#"
+        self._board[10][13] = "#"
+        self._board[16][13] = "#"
+        self._board[6][4] = "#"
+        self._board[6][10] = "#"
+        self._board[6][15] = "#"
+        self._board[13][3] = "#"
+        self._board[13][10] = "#"
+        self._board[13][16] = "#"
+
+        # Hay alguna forma más bonita de hacerlo?
+        room1 = Room(id=1, entries=[(2, 6)])
+        self._rooms.append(room1)
+        room2 = Room(id=2, entries=[(6, 10)])
+        self._rooms.append(room2)
+        room3 = Room(id=3, entries=[(4, 6)])
+        self._rooms.append(room3)
+        room4 = Room(id=4, entries=[(6, 4), (10, 6), (13, 3)])
+        self._rooms.append(room4)
+        room5 = Room(id=5, entries=[(6, 15), (10, 13), (13, 16)])
+        self._rooms.append(room5)
+        room6 = Room(id=6, entries=[(15, 6)])
+        self._rooms.append(room6)
+        room7 = Room(id=7, entries=[(13, 10)])
+        self._rooms.append(room7)
+        room8 = Room(id=8, entries=[(16, 13)])
+        self._rooms.append(room8)
+
+        i = 0
+        for j in range(20):
+            for k in range(20):
+                self._boardTuples[i] = (j, k)
+                i += 1
+
+        self._boardId = [[0 for x in range(20)] for y in range(20)]
+        i = 0
+        for j in range(20):
+            for k in range(20):
+                self._boardId[j][k] = i
+                i += 1
+
+    def getPositionIdFromTuple(self, position: List):
+        if position == [-1, -1]:
+            return -1
+        return self._boardId[position[0]][position[1]]
+
+    def getPositionTupleFromId(self, id: int):
+        return (self._boardTuples[id][0], self._boardTuples[id][1])
+
+    def detectRoom(self, y: int, x: int):
+        for r in self._rooms:
+            if (y, x) in r.entries:
+                return r.id
+
+    def moveLeft(self, y, x, moves, availablePositions, availableRooms):
+        x_AxisPosition, y_AxisPosition, remainingMoves = x - 1, y, moves - 1
+        aux_remainingMoves, aux_yAxis, aux_xAxis = 0, 0, 0
+
+        while remainingMoves >= 0 and x_AxisPosition >= 0:
+
+            availablePositions.append((y_AxisPosition, x_AxisPosition))
+
+            if self._board[y_AxisPosition + 1][x_AxisPosition] != "*":
+                aux_remainingMoves = remainingMoves
+                aux_yAxis = y_AxisPosition
+                aux_xAxis = x_AxisPosition
+
+            if (
+                self._board[y_AxisPosition][x_AxisPosition] == "#"
+                and remainingMoves >= 1
+            ):
+                room = self.detectRoom(y_AxisPosition, x_AxisPosition)
+                availableRooms.append(room)
+
+            x_AxisPosition -= 1
+            remainingMoves -= 1
+
+        if aux_remainingMoves > 0:
+            self.moveUp(
+                aux_yAxis,
+                aux_xAxis,
+                aux_remainingMoves,
+                availablePositions,
+                availableRooms,
+            )
+            self.moveDown(
+                aux_yAxis,
+                aux_xAxis,
+                aux_remainingMoves,
+                availablePositions,
+                availableRooms,
+            )
+
+    def moveRight(self, y, x, moves, availablePositions, availableRooms):
+        x_AxisPosition, y_AxisPosition, remainingMoves = x + 1, y, moves - 1
+        aux_remainingMoves, aux_yAxis, aux_xAxis = 0, 0, 0
+
+        while remainingMoves >= 0 and x_AxisPosition <= 19:
+
+            availablePositions.append((y_AxisPosition, x_AxisPosition))
+
+            if self._board[y_AxisPosition + 1][x_AxisPosition] != "*":
+                aux_remainingMoves = remainingMoves
+                aux_yAxis = y_AxisPosition
+                aux_xAxis = x_AxisPosition
+
+            if (
+                self._board[y_AxisPosition][x_AxisPosition] == "#"
+                and remainingMoves >= 1
+            ):
+                room = self.detectRoom(y_AxisPosition, x_AxisPosition)
+                availableRooms.append(room)
+
+            x_AxisPosition += 1
+            remainingMoves -= 1
+
+        if aux_remainingMoves > 0:
+            self.moveUp(
+                aux_yAxis,
+                aux_xAxis,
+                aux_remainingMoves,
+                availablePositions,
+                availableRooms,
+            )
+            self.moveDown(
+                aux_yAxis,
+                aux_xAxis,
+                aux_remainingMoves,
+                availablePositions,
+                availableRooms,
+            )
+
+    def moveUp(self, y, x, moves, availablePositions, availableRooms):
+        x_AxisPosition, y_AxisPosition, remainingMoves = x, y - 1, moves - 1
+        aux_remainingMoves, aux_yAxis, aux_xAxis = 0, 0, 0
+
+        while remainingMoves >= 0 and y_AxisPosition >= 0:
+
+            availablePositions.append((y_AxisPosition, x_AxisPosition))
+
+            if self._board[y_AxisPosition][x_AxisPosition + 1] != "*":
+                aux_remainingMoves = remainingMoves
+                aux_yAxis = y_AxisPosition
+                aux_xAxis = x_AxisPosition
+
+            if (
+                self._board[y_AxisPosition][x_AxisPosition] == "#"
+                and remainingMoves >= 1
+            ):
+                room = self.detectRoom(y_AxisPosition, x_AxisPosition)
+                availableRooms.append(room)
+
+            y_AxisPosition -= 1
+            remainingMoves -= 1
+
+        if aux_remainingMoves > 0:
+            self.moveLeft(
+                aux_yAxis,
+                aux_xAxis,
+                aux_remainingMoves,
+                availablePositions,
+                availableRooms,
+            )
+            self.moveRight(
+                aux_yAxis,
+                aux_xAxis,
+                aux_remainingMoves,
+                availablePositions,
+                availableRooms,
+            )
+
+    def moveDown(self, y, x, moves, availablePositions, availableRooms):
+        x_AxisPosition, y_AxisPosition, remainingMoves = x, y + 1, moves - 1
+        aux_remainingMoves, aux_yAxis, aux_xAxis = 0, 0, 0
+
+        while remainingMoves >= 0 and y_AxisPosition <= 19:
+
+            availablePositions.append((y_AxisPosition, x_AxisPosition))
+
+            if self._board[y_AxisPosition][x_AxisPosition + 1] != "*":
+                aux_remainingMoves = remainingMoves
+                aux_yAxis = y_AxisPosition
+                aux_xAxis = x_AxisPosition
+
+            if (
+                self._board[y_AxisPosition][x_AxisPosition] == "#"
+                and remainingMoves >= 1
+            ):
+                room = self.detectRoom(y_AxisPosition, x_AxisPosition)
+                availableRooms.append(room)
+
+            y_AxisPosition += 1
+            remainingMoves -= 1
+
+        if aux_remainingMoves > 0:
+            self.moveLeft(
+                aux_yAxis,
+                aux_xAxis,
+                aux_remainingMoves,
+                availablePositions,
+                availableRooms,
+            )
+            self.moveRight(
+                aux_yAxis,
+                aux_xAxis,
+                aux_remainingMoves,
+                availablePositions,
+                availableRooms,
+            )
+
+    def calculatePositions(self, y, x, diceNumber):
+
+        availablePositions = []
+        availableRooms = []
+
+        if x != 6 and x != 13 and y != 6 and y != 13:
+            return [], []
+
+        if diceNumber > 1:
+            availablePositions.append((y, x))
+            if self._board[y][x] == "#":
+                room = self.detectRoom(y, x)
+                availableRooms.append(room)
+
+        if (x == 6 or x == 13) and (y == 6 or y == 13):
+            self.moveUp(y, x, diceNumber, availablePositions, availableRooms)
+            self.moveDown(y, x, diceNumber, availablePositions, availableRooms)
+            self.moveLeft(y, x, diceNumber, availablePositions, availableRooms)
+            self.moveRight(y, x, diceNumber, availablePositions, availableRooms)
+
+        elif x == 6 or x == 13:
+            self.moveUp(y, x, diceNumber, availablePositions, availableRooms)
+            self.moveDown(y, x, diceNumber, availablePositions, availableRooms)
+
+        elif y == 6 or y == 13:
+            self.moveLeft(y, x, diceNumber, availablePositions, availableRooms)
+            self.moveRight(y, x, diceNumber, availablePositions, availableRooms)
+
+        return availablePositions, availableRooms
+
+    def f(self, player: Player, diceNumber):
+
+        availablePositions = []
+        availableRooms = []
+
+        exits = []
+
+        if player.room:
+            for r in self._rooms:
+                if r.id == player.room:
+                    exits = r.entries
+                    break
+
+            for e in exits:
+                y, x = e[0], e[1]
+                if diceNumber == 1:
+                    availablePositions.append((y, x))
+                else:
+                    l1, l2 = self.calculatePositions(y, x, diceNumber - 1)
+                    availablePositions.extend(l1)
+                    availableRooms.extend(l2)
+
+
+        else:
+            #p = self.getPositionTupleFromId(player.position)
+            availablePositions, availableRooms = self.calculatePositions(
+                0, 6, diceNumber
+            )
+
+        #Elimina repetidos en caso de que los haya
+        availablePositions = list(dict.fromkeys(availablePositions))
+        availableRooms = list(dict.fromkeys(availableRooms))
+
+        return availablePositions, availableRooms

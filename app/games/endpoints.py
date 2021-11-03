@@ -1,18 +1,26 @@
 from random import randint
-from typing import List
+from typing import List, Tuple
 
 from app.games.connections import GameConnectionManager
-from app.games.events import BEGIN_GAME_EVENT, DICE_ROLL_EVENT, PLAYER_JOINED_EVENT
+from app.games.boardManager import BoardManager
+from app.games.events import (
+    BEGIN_GAME_EVENT,
+    DICE_ROLL_EVENT,
+    PLAYER_JOINED_EVENT,
+    ENTER_ROOM_EVENT,
+    MOVE_PLAYER_EVENT,
+)
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
-from app.games.schemas import AvailableGameSchema, CreateGameSchema, joinGameSchema
+from app.games.schemas import AvailableGameSchema, CreateGameSchema, joinGameSchema, MovePlayerSchema
 from app.models import Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
-from pony.orm import db_session
+from pony.orm import db_session, commit
 from pony.orm.core import flush
 from starlette.websockets import WebSocketDisconnect
 
 router = APIRouter(prefix="/games")
 manager = GameConnectionManager()
+board = BoardManager()
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -69,6 +77,7 @@ async def beginGame(gameID: int, playerID: int, response: Response):
                 }
             elif game.started == False:
                 game.startGame()
+                board.createBoard()
                 response.status_code = status.HTTP_204_NO_CONTENT
                 await manager.broadcastToGame(
                     gameID, {"type": BEGIN_GAME_EVENT, "payload": None}
@@ -97,7 +106,7 @@ async def getDice(gameID: int, playerID: int, response: Response):
             await manager.broadcastToGame(
                 gameID, {"type": DICE_ROLL_EVENT, "payload": ans}
             )
-            game.incrementTurn()
+            #game.incrementTurn()
             response.status_code = status.HTTP_204_NO_CONTENT
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
@@ -146,6 +155,81 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
         )
 
         return {"playerId": player.id}
+
+
+@router.get("/{gameID}/positions/{playerID}/{diceNumber}")
+async def availablePositions(
+    gameID: int, playerID: int, diceNumber: int, response: Response
+):
+    with db_session:
+        game = Game.get(id=gameID)
+        player = Player.get(id=playerID)
+        if game is None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": "Partida no existente"}
+        elif player is None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": "Jugador no existente"}
+        elif game.currentTurn == player.turnOrder:
+            availablePositions, availableRooms = board.f(player, diceNumber)
+            return availablePositions, availableRooms
+        else:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": "No es el turno del jugador"}
+
+
+@router.patch("/{gameID}/move/{playerID}")
+async def movePlayer(
+    gameID: int,
+    playerID: int,
+    data: MovePlayerSchema, 
+    response: Response,
+):
+    with db_session:
+        game = Game.get(id=gameID)
+        player = Player.get(id=playerID)
+        if game is None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": "Partida no existente"}
+        elif player is None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": "Jugador no existente"}
+        elif game.currentTurn == player.turnOrder:
+            if data.position == [-1, -1] and data.room == -1:
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return {"Error": "Faltan parámetros"}
+            elif data.position == [-1, -1]:
+                player.room = data.room
+                commit()
+                await manager.broadcastToGame(
+                    game.id,
+                    {
+                        "type": ENTER_ROOM_EVENT,
+                        "payload": {
+                            "playerId": player.id,
+                            "playerRoom": player.room,
+                        },
+                    },
+                )
+            else:
+                position = board.getPositionIdFromTuple(data.position)
+                player.position = position
+                player.room = None
+                commit()
+                await manager.broadcastToGame(
+                    game.id,
+                    {
+                        "type": MOVE_PLAYER_EVENT,
+                        "payload": {
+                            "playerId": player.id,
+                            "playerPosition": player.position,
+                        },
+                    },
+                )
+
+        else:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": "No es el turno del jugador"}
 
 
 @router.websocket("/games/{gameId}/ws/{playerId}")

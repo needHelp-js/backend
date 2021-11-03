@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from typing import List
 
 class AvailableGameSchema(BaseModel):
     id: int
@@ -14,3 +14,8 @@ class CreateGameSchema(BaseModel):
 
 class joinGameSchema(BaseModel):
     playerNickname: str
+
+class MovePlayerSchema(BaseModel):
+    position: List = [-1, -1]
+    room: int = -1
+
