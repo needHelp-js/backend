@@ -1,6 +1,6 @@
 import functools
 
-from app.models import Game
+from app.models import Game, Player
 from fastapi import responses, status
 from pony.orm import db_session
 from starlette.responses import Response
@@ -16,9 +16,9 @@ def gameRequired(f):
 
         with db_session:
 
-            game = Game.get(id=kargs["gameId"])
+            gameExists = Game.exists(id=kargs["gameId"])
 
-            if game is None:
+            if not gameExists:
                 kargs["response"].status_code = status.HTTP_404_NOT_FOUND
                 return {"Error": f"Partida {kargs['gameId']} no existe."}
 
@@ -29,18 +29,21 @@ def gameRequired(f):
 
 def playerInGame(f):
     """
-    Decorator that checks if a player is inside a game given a playerId and a gameId.
+    Decorator that checks if a player exists given a playerId.
+    If it exists, checks if they are inside a game given a gameId.
     """
 
     @functools.wraps(f)
     async def fWrapper(*args, **kargs):
         with db_session:
+            
+            player = Player.get(id=kargs['playerId'])
 
-            game = Game.get(id=kargs["gameId"])
+            if player is None:
+                kargs['response'].status_code = status.HTTP_404_NOT_FOUND
+                return {"Error": f"El jugador {kargs['playerId']} no existe"}
 
-            players = game.players.filter(lambda player: player.id == kargs["playerId"])
-
-            if len(players) == 0:
+            if player.currentGame.id != kargs['gameId']: 
                 kargs["response"].status_code = status.HTTP_403_FORBIDDEN
                 return {
                     "Error": f"El jugador {kargs['playerId']} no esta en la partida {kargs['gameId']}."
