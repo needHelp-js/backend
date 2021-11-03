@@ -11,6 +11,7 @@ from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
 from pony.orm.core import flush
 from starlette.websockets import WebSocketDisconnect
+from app.games.decorators import gameRequired
 
 router = APIRouter(prefix="/games")
 manager = GameConnectionManager()
@@ -144,14 +145,12 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
         return {"playerId": player.id}
 
 @router.get("/{gameId}")
+@gameRequired
 async def getGameDetails(gameId: int, playerId: int, response: Response):
     with db_session:
 
         game = Game.get(id=gameId)
 
-        if game is None:
-            response.status_code = status.HTTP_404_NOT_FOUND
-            return {"Error": f"Partida {gameId} no existe."}
 
         players = game.players.filter(lambda player: player.id == playerId)
 
