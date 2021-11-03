@@ -2,6 +2,7 @@ from random import randint
 from typing import List, Tuple
 
 from app.games.connections import GameConnectionManager
+<<<<<<< HEAD
 from app.games.boardManager import BoardManager
 from app.games.events import (
     BEGIN_GAME_EVENT,
@@ -12,6 +13,15 @@ from app.games.events import (
 )
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
 from app.games.schemas import AvailableGameSchema, CreateGameSchema, joinGameSchema, MovePlayerSchema
+=======
+from app.games.decorators import gameRequired, playerInGame
+from app.games.events import (BEGIN_GAME_EVENT, DICE_ROLL_EVENT,
+                              PLAYER_JOINED_EVENT)
+from app.games.exceptions import (GameConnectionDoesNotExist,
+                                  PlayerAlreadyConnected)
+from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
+                               joinGameSchema)
+>>>>>>> dev
 from app.models import Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session, commit
@@ -230,6 +240,22 @@ async def movePlayer(
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": "No es el turno del jugador"}
+@router.get("/{gameId}")
+@gameRequired
+@playerInGame
+async def getGameDetails(gameId: int, playerId: int, response: Response):
+    with db_session:
+
+        game = Game.get(id=gameId)
+
+        dict = game.to_dict(related_objects=True, with_collections=True)
+        excluded_fields = ["hostedGame", "currentGame"]
+
+        dict["players"] = [p.to_dict(exclude=excluded_fields) for p in dict["players"]]
+
+        dict["host"] = dict["host"].to_dict(exclude=excluded_fields)
+
+        return dict
 
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
