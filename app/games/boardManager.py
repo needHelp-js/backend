@@ -76,7 +76,7 @@ class BoardManager:
         return self._boardId[position[0]][position[1]]
 
     def getPositionTupleFromId(self, id: int):
-        return (self._boardTuples[id][0], self._boardTuples[id][1])
+        return self._boardTuples[id][0], self._boardTuples[id][1]
 
     def detectRoom(self, y: int, x: int):
         for r in self._rooms:
@@ -293,9 +293,9 @@ class BoardManager:
 
 
         else:
-            #p = self.getPositionTupleFromId(player.position)
+            y, x = self.getPositionTupleFromId(player.position)
             availablePositions, availableRooms = self.calculatePositions(
-                0, 6, diceNumber
+                y, x, diceNumber
             )
 
         #Elimina repetidos en caso de que los haya

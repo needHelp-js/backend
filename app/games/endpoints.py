@@ -231,6 +231,7 @@ async def movePlayer(
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": "No es el turno del jugador"}
+
 @router.get("/{gameId}")
 @gameRequired
 @playerInGame
