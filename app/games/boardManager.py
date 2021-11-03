@@ -70,8 +70,8 @@ class BoardManager:
                 self._boardId[j][k] = i
                 i += 1
 
-    def getPositionIdFromTuple(self, position: List):
-        if position == [-1, -1]:
+    def getPositionIdFromTuple(self, position: Tuple):
+        if position == (-1, -1):
             return -1
         return self._boardId[position[0]][position[1]]
 
@@ -249,9 +249,10 @@ class BoardManager:
 
         if diceNumber > 1:
             availablePositions.append((y, x))
-            if self._board[y][x] == "#":
-                room = self.detectRoom(y, x)
-                availableRooms.append(room)
+
+        if diceNumber >= 1 and self._board[y][x] == "#":
+            room = self.detectRoom(y, x)
+            availableRooms.append(room)
 
         if (x == 6 or x == 13) and (y == 6 or y == 13):
             self.moveUp(y, x, diceNumber, availablePositions, availableRooms)
@@ -291,15 +292,31 @@ class BoardManager:
                     availablePositions.extend(l1)
                     availableRooms.extend(l2)
 
-
         else:
             y, x = self.getPositionTupleFromId(player.position)
             availablePositions, availableRooms = self.calculatePositions(
                 y, x, diceNumber
             )
 
-        #Elimina repetidos en caso de que los haya
+        # Elimina repetidos en caso de que los haya
         availablePositions = list(dict.fromkeys(availablePositions))
         availableRooms = list(dict.fromkeys(availableRooms))
 
         return availablePositions, availableRooms
+
+    def checkPosition(self, player: Player, diceNumber, position: Tuple):
+
+        availablePositions, _ = self.f(player, diceNumber)
+        if tuple(position) in availablePositions:
+            return True
+
+        return False
+
+    def checkRoom(self, player: Player, diceNumber, room):
+
+        _, availableRooms = self.f(player, diceNumber)
+
+        if room in availableRooms:
+            return True
+
+        return False

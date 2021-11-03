@@ -22,7 +22,7 @@ class GameMixin(object):
         for player in self.players:
             player.position = initialPositions[i]
             i += 1
-    
+
     def startGame(self):
         self.setPlayersInitialPositions()
         self.currentTurn = 1

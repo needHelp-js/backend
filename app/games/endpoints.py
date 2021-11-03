@@ -11,7 +11,12 @@ from app.games.events import (
     MOVE_PLAYER_EVENT,
 )
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
-from app.games.schemas import AvailableGameSchema, CreateGameSchema, joinGameSchema, MovePlayerSchema
+from app.games.schemas import (
+    AvailableGameSchema,
+    CreateGameSchema,
+    joinGameSchema,
+    MovePlayerSchema,
+)
 from app.games.decorators import gameRequired, playerInGame
 from app.models import Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
@@ -107,7 +112,7 @@ async def getDice(gameID: int, playerID: int, response: Response):
             await manager.broadcastToGame(
                 gameID, {"type": DICE_ROLL_EVENT, "payload": ans}
             )
-            #game.incrementTurn()
+            # game.incrementTurn()
             response.status_code = status.HTTP_204_NO_CONTENT
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
@@ -158,7 +163,7 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
         return {"playerId": player.id}
 
 
-@router.get("/{gameID}/positions/{playerID}/{diceNumber}")
+@router.get("/{gameID}/positions/{playerID}")
 async def availablePositions(
     gameID: int, playerID: int, diceNumber: int, response: Response
 ):
@@ -183,54 +188,76 @@ async def availablePositions(
 async def movePlayer(
     gameID: int,
     playerID: int,
-    data: MovePlayerSchema, 
+    data: MovePlayerSchema,
     response: Response,
 ):
     with db_session:
+
         game = Game.get(id=gameID)
         player = Player.get(id=playerID)
+
         if game is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Partida no existente"}
+
         elif player is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Jugador no existente"}
-        elif game.currentTurn == player.turnOrder:
-            if data.position == [-1, -1] and data.room == -1:
-                response.status_code = status.HTTP_400_BAD_REQUEST
-                return {"Error": "Faltan parámetros"}
-            elif data.position == [-1, -1]:
-                player.room = data.room
-                commit()
-                await manager.broadcastToGame(
-                    game.id,
-                    {
-                        "type": ENTER_ROOM_EVENT,
-                        "payload": {
-                            "playerId": player.id,
-                            "playerRoom": player.room,
-                        },
-                    },
-                )
-            else:
-                position = board.getPositionIdFromTuple(data.position)
-                player.position = position
-                player.room = None
-                commit()
-                await manager.broadcastToGame(
-                    game.id,
-                    {
-                        "type": MOVE_PLAYER_EVENT,
-                        "payload": {
-                            "playerId": player.id,
-                            "playerPosition": player.position,
-                        },
-                    },
-                )
 
-        else:
+        elif game.currentTurn != player.turnOrder:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": "No es el turno del jugador"}
+
+        elif game.currentTurn == player.turnOrder:
+
+            if data.position == (-1, -1) and data.room == -1:
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return {"Error": "Faltan parámetros"}
+
+            elif data.position != (-1, -1) and data.room != -1:
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return {"Error": "Parámetros incorrectos"}
+
+            elif data.room != -1:
+
+                if board.checkRoom(player, data.diceNumber, data.room):
+                    player.room = data.room
+                    await manager.broadcastToGame(
+                        game.id,
+                        {
+                            "type": ENTER_ROOM_EVENT,
+                            "payload": {
+                                "playerId": player.id,
+                                "playerRoom": player.room,
+                            },
+                        },
+                    )
+
+                else:
+                    response.status_code = status.HTTP_403_FORBIDDEN
+                    return {"Error": "Recinto no disponible para este jugador."}
+
+            else:
+
+                if board.checkPosition(player, data.diceNumber, data.position):
+
+                    position = board.getPositionIdFromTuple(data.position)
+                    player.position = position
+                    player.room = None
+                    await manager.broadcastToGame(
+                        game.id,
+                        {
+                            "type": MOVE_PLAYER_EVENT,
+                            "payload": {
+                                "playerId": player.id,
+                                "playerPosition": tuple(data.position),
+                            },
+                        },
+                    )
+                else:
+                    response.status_code = status.HTTP_403_FORBIDDEN
+                    return {"Error": "Posición no disponible para este jugador."}
+
 
 @router.get("/{gameId}")
 @gameRequired
