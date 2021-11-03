@@ -2,16 +2,18 @@ from random import randint
 from typing import List
 
 from app.games.connections import GameConnectionManager
-from app.games.decorators import gameRequired
-from app.games.events import BEGIN_GAME_EVENT, DICE_ROLL_EVENT, PLAYER_JOINED_EVENT
-from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
-from app.games.schemas import AvailableGameSchema, CreateGameSchema, joinGameSchema
+from app.games.decorators import gameRequired, playerInGame
+from app.games.events import (BEGIN_GAME_EVENT, DICE_ROLL_EVENT,
+                              PLAYER_JOINED_EVENT)
+from app.games.exceptions import (GameConnectionDoesNotExist,
+                                  PlayerAlreadyConnected)
+from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
+                               joinGameSchema)
 from app.models import Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
 from pony.orm.core import flush
 from starlette.websockets import WebSocketDisconnect
-from app.games.decorators import gameRequired, playerInGame
 
 router = APIRouter(prefix="/games")
 manager = GameConnectionManager()
@@ -143,6 +145,7 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
         )
 
         return {"playerId": player.id}
+
 
 @router.get("/{gameId}")
 @gameRequired

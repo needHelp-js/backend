@@ -1,9 +1,8 @@
 from app.games.endpoints import manager
-from app.games.events import PLAYER_JOINED_EVENT
+from app.games.events import BEGIN_GAME_EVENT, PLAYER_JOINED_EVENT
 from app.models import Game, Player
 from fastapi import status
 from pony.orm import db_session
-from app.games.events import BEGIN_GAME_EVENT
 
 
 def test_createGame_success(client):
@@ -235,6 +234,7 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
         ],
         "host": {"id": 1, "nickname": "p1", "turnOrder": 1},
     }
+
 
 def test_getGameDetails_playerNotInGame(client, dataTirarDado):
 
