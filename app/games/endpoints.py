@@ -11,7 +11,7 @@ from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
 from pony.orm.core import flush
 from starlette.websockets import WebSocketDisconnect
-from app.games.decorators import gameRequired
+from app.games.decorators import gameRequired, playerInGame
 
 router = APIRouter(prefix="/games")
 manager = GameConnectionManager()
@@ -146,17 +146,11 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
 
 @router.get("/{gameId}")
 @gameRequired
+@playerInGame
 async def getGameDetails(gameId: int, playerId: int, response: Response):
     with db_session:
 
         game = Game.get(id=gameId)
-
-
-        players = game.players.filter(lambda player: player.id == playerId)
-
-        if len(players) == 0:
-            response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": f"El jugador {playerId} no esta en la partida {gameId}."}
 
         dict = game.to_dict(related_objects=True, with_collections=True)
         excluded_fields = ["hostedGame", "currentGame"]
