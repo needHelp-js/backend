@@ -2,7 +2,6 @@ from random import randint
 from typing import List, Tuple
 
 from app.games.connections import GameConnectionManager
-<<<<<<< HEAD
 from app.games.boardManager import BoardManager
 from app.games.events import (
     BEGIN_GAME_EVENT,
@@ -13,15 +12,7 @@ from app.games.events import (
 )
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
 from app.games.schemas import AvailableGameSchema, CreateGameSchema, joinGameSchema, MovePlayerSchema
-=======
 from app.games.decorators import gameRequired, playerInGame
-from app.games.events import (BEGIN_GAME_EVENT, DICE_ROLL_EVENT,
-                              PLAYER_JOINED_EVENT)
-from app.games.exceptions import (GameConnectionDoesNotExist,
-                                  PlayerAlreadyConnected)
-from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
-                               joinGameSchema)
->>>>>>> dev
 from app.models import Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session, commit
