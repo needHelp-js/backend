@@ -2,6 +2,7 @@ from random import randint
 from typing import List
 
 from app.games.connections import GameConnectionManager
+from app.games.decorators import gameRequired
 from app.games.events import BEGIN_GAME_EVENT, DICE_ROLL_EVENT, PLAYER_JOINED_EVENT
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
 from app.games.schemas import AvailableGameSchema, CreateGameSchema, joinGameSchema
@@ -142,9 +143,8 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
 
         return {"playerId": player.id}
 
-
 @router.get("/{gameId}")
-async def getGameDetails(gameId: int, response: Response):
+async def getGameDetails(gameId: int, playerId: int, response: Response):
     with db_session:
 
         game = Game.get(id=gameId)
@@ -152,6 +152,12 @@ async def getGameDetails(gameId: int, response: Response):
         if game is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": f"Partida {gameId} no existe."}
+
+        players = game.players.filter(lambda player: player.id == playerId)
+
+        if len(players) == 0:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": f"El jugador {playerId} no esta en la partida {gameId}."}
 
         dict = game.to_dict(related_objects=True, with_collections=True)
         excluded_fields = ["hostedGame", "currentGame"]
