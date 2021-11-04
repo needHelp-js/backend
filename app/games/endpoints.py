@@ -3,13 +3,10 @@ from typing import List
 
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, playerInGame
-from app.games.events import (BEGIN_GAME_EVENT, DICE_ROLL_EVENT,
-                              PLAYER_JOINED_EVENT)
-from app.games.exceptions import (GameConnectionDoesNotExist,
-                                  PlayerAlreadyConnected)
-from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
-                               joinGameSchema)
-from app.models import Game, Player
+from app.games.events import BEGIN_GAME_EVENT, DICE_ROLL_EVENT, PLAYER_JOINED_EVENT
+from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
+from app.games.schemas import AvailableGameSchema, CreateGameSchema, joinGameSchema
+from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
 from pony.orm.core import flush
@@ -168,6 +165,34 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
         dict["host"] = dict["host"].to_dict(exclude=excluded_fields)
 
         return dict
+
+
+@router.post("/{gameId}/sospechar/{playerId}")
+@gameRequired
+@playerInGame
+async def sospechar(
+    gameId: int, playerId: int, cardNames: List(int), response: Response
+):
+
+    if len(cardNames) != 2:
+        response.status_code = status.HTTP_403_FORBIDDEN
+        return {"Error": f"Debes mandar 2 cartas"}
+
+    with db_session:
+        card1 = Card.get(lambda c: c.game.id == gameId and c.name == cardNames[0])
+        card2 = Card.get(lambda c: c.game.id == gameId and c.name == cardNames[1])
+
+        if card1 == None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": f"La carta {cardNames[0]} no existe"}
+
+        if card2 == None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": f"La carta {cardNames[1]} no existe"}
+
+        if {card1.type, card2.type} != {"victima", "monstruo"}:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": f"Debes mandar una victima y un monstruo"}
 
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
