@@ -171,11 +171,11 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
 @gameRequired
 @playerInGame
 async def sospechar(
-    gameId: int, playerId: int, cardNames: List(int), response: Response
+    gameId: int, playerId: int, cardNames: List[str], response: Response
 ):
 
     if len(cardNames) != 2:
-        response.status_code = status.HTTP_403_FORBIDDEN
+        response.status_code = status.HTTP_400_BAD_REQUEST
         return {"Error": f"Debes mandar 2 cartas"}
 
     with db_session:
