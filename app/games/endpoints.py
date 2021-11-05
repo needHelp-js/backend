@@ -5,7 +5,7 @@ from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, playerInGame
 from app.games.events import BEGIN_GAME_EVENT, DICE_ROLL_EVENT, PLAYER_JOINED_EVENT
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
-from app.games.schemas import AvailableGameSchema, CreateGameSchema, joinGameSchema
+from app.games.schemas import AvailableGameSchema, CreateGameSchema, SospecharSchema, joinGameSchema
 from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
@@ -167,33 +167,37 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
         return dict
 
 
-@router.post("/{gameId}/sospechar/{playerId}")
+@router.post("/{gameId}/sospechar")
 @gameRequired
 @playerInGame
 async def sospechar(
-    gameId: int, playerId: int, cardNames: List[str], response: Response
+    gameId: int, schema: SospecharSchema, response: Response
 ):
 
-    if len(cardNames) != 2:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return {"Error": f"Debes mandar 2 cartas"}
-
     with db_session:
-        card1 = Card.get(lambda c: c.game.id == gameId and c.name == cardNames[0])
-        card2 = Card.get(lambda c: c.game.id == gameId and c.name == cardNames[1])
+        player = Player[schema.playerId]
+        game = Game[gameId]
+
+        if player.turnOrder != game.currentTurn:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": "No es el turno del jugador"}
+
+        card1 = Card.get(lambda c: c.game.id == gameId and c.name == schema.card1Name)
+        card2 = Card.get(lambda c: c.game.id == gameId and c.name == schema.card2Name)
 
         if card1 == None:
             response.status_code = status.HTTP_404_NOT_FOUND
-            return {"Error": f"La carta {cardNames[0]} no existe"}
+            return {"Error": f"La carta {schema.card1Name} no existe"}
 
         if card2 == None:
             response.status_code = status.HTTP_404_NOT_FOUND
-            return {"Error": f"La carta {cardNames[1]} no existe"}
+            return {"Error": f"La carta {schema.card2Name} no existe"}
 
         if {card1.type, card2.type} != {"victima", "monstruo"}:
-            response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": f"Debes mandar una victima y un monstruo"}
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"Error": "Debes mandar una victima y un monstruo"}
 
+        return {"Success": "Se mandaron correctamente las cartas"}
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
 async def createWebsocketConnection(gameId: int, playerId: int, websocket: WebSocket):

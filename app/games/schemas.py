@@ -14,3 +14,10 @@ class CreateGameSchema(BaseModel):
 
 class joinGameSchema(BaseModel):
     playerNickname: str
+
+class playerSchema(BaseModel):
+    playerId: int
+
+class SospecharSchema(playerSchema):
+    card1Name: str
+    card2Name: str
