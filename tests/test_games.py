@@ -198,6 +198,7 @@ def test_getGameDetails_success(client, dataListGames):
         "currentTurn": 0,
         "players": [{"id": 0, "nickname": "p0", "turnOrder": None}],
         "host": {"id": 0, "nickname": "p0", "turnOrder": None},
+        "cards": [],
     }
 
 
@@ -216,6 +217,7 @@ def test_getGameDetails_startedGame(client, dataListGames):
         "currentTurn": 1,
         "players": [{"id": 0, "nickname": "p0", "turnOrder": 1}],
         "host": {"id": 0, "nickname": "p0", "turnOrder": 1},
+        "cards": [],
     }
 
 
@@ -233,4 +235,59 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
             {"id": 2, "nickname": "p2", "turnOrder": 2},
         ],
         "host": {"id": 1, "nickname": "p1", "turnOrder": 1},
+        "cards": [],
     }
+
+
+def test_sospechar_success(client, dataCards):
+
+    response = client.post(
+        "/games/1/sospechar",
+        json={"playerId": 1, "card1Name": "Conde", "card2Name": "Drácula"},
+    )
+
+    assert response.json() == {"Success": "Se mandaron correctamente las cartas"}
+
+
+def test_sospechar_card1NoExists(client, dataCards):
+
+    response = client.post(
+        "/games/1/sospechar",
+        json={"playerId": 1, "card1Name": "Perro", "card2Name": "Condesa"},
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {"Error": "La carta Perro no existe"}
+
+
+def test_sospechar_card2NoExists(client, dataCards):
+
+    response = client.post(
+        "/games/1/sospechar",
+        json={"playerId": 1, "card1Name": "Condesa", "card2Name": "Gato"},
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {"Error": "La carta Gato no existe"}
+
+
+def test_sospechar_twoVictima(client, dataCards):
+
+    response = client.post(
+        "/games/1/sospechar",
+        json={"playerId": 1, "card1Name": "Conde", "card2Name": "Condesa"},
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"Error": "Debes mandar una victima y un monstruo"}
+
+
+def test_sospechar_noCurrentTurn(client, dataCards):
+
+    response = client.post(
+        "/games/1/sospechar",
+        json={"playerId": 2, "card1Name": "Conde", "card2Name": "Condesa"},
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {"Error": "No es el turno del jugador"}
