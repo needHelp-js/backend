@@ -20,4 +20,4 @@ class joinGameSchema(BaseModel):
 class MovePlayerSchema(BaseModel):
     diceNumber: int
     position: Tuple = (-1, -1)
-    room: int = -1
+    room: str = ""

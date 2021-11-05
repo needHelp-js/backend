@@ -163,26 +163,42 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
         return {"playerId": player.id}
 
 
-@router.get("/{gameID}/positions/{playerID}")
+@router.get("/{gameID}/availablePositions/{playerID}")
 async def availablePositions(
     gameID: int, playerID: int, diceNumber: int, response: Response
 ):
     with db_session:
         game = Game.get(id=gameID)
         player = Player.get(id=playerID)
+        
         if game is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Partida no existente"}
+        
         elif player is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Jugador no existente"}
+        
         elif game.currentTurn == player.turnOrder:
             availablePositions, availableRooms = board.f(player, diceNumber)
-            return availablePositions, availableRooms
+            return {"availablePositions": availablePositions, "availableRooms": availableRooms}
+        
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": "No es el turno del jugador"}
 
+@router.get("/{gameID}/positions")
+async def positions(gameID: int):
+    with db_session:
+        game = Game.get(id=gameID)
+        playerList = game.players
+        playerPositions = []
+        
+        for p in playerList:
+            position = board.getPositionTupleFromId(p.position)
+            playerPositions.append(position)
+        
+        return {"playerPositions": playerPositions}
 
 @router.patch("/{gameID}/move/{playerID}")
 async def movePlayer(
@@ -210,25 +226,25 @@ async def movePlayer(
 
         elif game.currentTurn == player.turnOrder:
 
-            if data.position == (-1, -1) and data.room == -1:
+            if data.position == (-1, -1) and data.room == "":
                 response.status_code = status.HTTP_400_BAD_REQUEST
                 return {"Error": "Faltan parámetros"}
 
-            elif data.position != (-1, -1) and data.room != -1:
+            elif data.position != (-1, -1) and data.room != "":
                 response.status_code = status.HTTP_400_BAD_REQUEST
                 return {"Error": "Parámetros incorrectos"}
 
-            elif data.room != -1:
+            elif data.room != "":
 
                 if board.checkRoom(player, data.diceNumber, data.room):
-                    player.room = data.room
+                    player.room = board.getRoomID(data.room)
                     await manager.broadcastToGame(
                         game.id,
                         {
                             "type": ENTER_ROOM_EVENT,
                             "payload": {
                                 "playerId": player.id,
-                                "playerRoom": player.room,
+                                "playerRoom": board.getRoomName(player.room),
                             },
                         },
                     )
