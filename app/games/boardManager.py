@@ -17,6 +17,14 @@ class BoardManager:
         self._boardId = [[]]
 
     def createBoard(self):
+        """Crea y configura las cosas iniciales del tablero
+
+        Modela el tablero con una matriz de tamaño 20x20, marcando con '.' las casillas por donde los jugadores 
+        pueden moverse, y con '#' las entradas a los recintos. 
+
+        También se le da un ID a cada casilla de la matriz, para así poder guardar la posición de los jugadores
+        en la base de datos.
+        """
         self._board = [["*" for x in range(20)] for y in range(20)]
         for y in range(20):
             self._board[y][6] = "."
@@ -72,7 +80,7 @@ class BoardManager:
                 i += 1
 
     def getPositionIdFromTuple(self, position: Tuple):
-        """Obtiene el ID de la casilla a partir de sus coordenadas x,y
+        """Obtiene el ID de una casilla del tablero a partir de sus coordenadas x, y
 
         Args:
             position: tupla que representa la posición (x, y) en la matriz del tablero
@@ -84,7 +92,7 @@ class BoardManager:
         return self._boardId[position[0]][position[1]]
 
     def getPositionTupleFromId(self, id: int):
-        """Obtiene la tupla (x, y) que representa una posición en la matriz a partir de su ID
+        """Obtiene a partir del ID de la casilla, la tupla (x, y) que representa su posición en la matriz
 
         Args:
             id: id único de la casilla
@@ -405,7 +413,7 @@ class BoardManager:
 
     def checkPosition(self, player: Player, diceNumber, position: Tuple):
         """Chequea si la posición a la que un jugador se intenta mover está dentro de sus casillas disponibles
-        
+
         Args:
             player: jugador que intenta moverse
             diceNumber: número que obtuvo en el dado
@@ -421,7 +429,7 @@ class BoardManager:
 
     def checkRoom(self, player: Player, diceNumber, room):
         """Chequea si el recinto al que un jugador quiere entrar está dentro de sus recintos disponibles
-        
+
         Args:
             player: jugador que intenta entrar al recinto
             diceNumber: número que obtuvo en el dado
