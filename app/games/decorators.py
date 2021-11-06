@@ -36,23 +36,18 @@ def playerInGame(f):
     @functools.wraps(f)
     async def fWrapper(*args, **kargs):
 
-        if 'schema' in kargs:
-            playerId = kargs['schema'].playerId
-        else:
-            playerId = kargs['playerId']
-
         with db_session:
 
-            player = Player.get(id=playerId)
+            player = Player.get(id=kargs['playerId'])
 
             if player is None:
                 kargs["response"].status_code = status.HTTP_404_NOT_FOUND
-                return {"Error": f"El jugador {playerId} no existe."}
+                return {"Error": f"El jugador {kargs['playerId']} no existe."}
 
             if player.currentGame is None or player.currentGame.id != kargs["gameId"]:
                 kargs["response"].status_code = status.HTTP_403_FORBIDDEN
                 return {
-                    "Error": f"El jugador {playerId} no esta en la partida {kargs['gameId']}."
+                    "Error": f"El jugador {kargs['playerId']} no esta en la partida {kargs['gameId']}."
                 }
 
             return await f(*args, **kargs)
