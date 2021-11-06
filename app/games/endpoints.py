@@ -167,15 +167,15 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
         return dict
 
 
-@router.post("/{gameId}/sospechar")
+@router.post("/{gameId}/sospechar/{playerId}")
 @gameRequired
 @playerInGame
 async def sospechar(
-    gameId: int, schema: SospecharSchema, response: Response
+    gameId: int, playerId: int, schema: SospecharSchema, response: Response
 ):
 
     with db_session:
-        player = Player[schema.playerId]
+        player = Player[playerId]
         game = Game[gameId]
 
         if player.turnOrder != game.currentTurn:
