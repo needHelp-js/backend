@@ -3,19 +3,12 @@ from typing import List
 
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, playerInGame
-from app.games.events import (
-    BEGIN_GAME_EVENT,
-    DICE_ROLL_EVENT,
-    PLAYER_JOINED_EVENT,
-    SOSPECHA_MADE_EVENT,
-)
-from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
-from app.games.schemas import (
-    AvailableGameSchema,
-    CreateGameSchema,
-    SospecharSchema,
-    joinGameSchema,
-)
+from app.games.events import (BEGIN_GAME_EVENT, DICE_ROLL_EVENT,
+                              PLAYER_JOINED_EVENT, SOSPECHA_MADE_EVENT)
+from app.games.exceptions import (GameConnectionDoesNotExist,
+                                  PlayerAlreadyConnected)
+from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
+                               SospecharSchema, joinGameSchema)
 from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session

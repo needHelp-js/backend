@@ -1,7 +1,7 @@
 from pony.orm import *
-from app.mixins import GameMixin
-from app.enums import CardType, VictimsNames, MonstersNames, RoomName
 
+from app.enums import CardType, MonstersNames, RoomName, VictimsNames
+from app.mixins import GameMixin
 
 db = Database()
 

@@ -1,18 +1,12 @@
 import os
-from fastapi.testclient import TestClient
-
-from config import Config
-from app.api import create_app
-from pony.orm import db_session, commit
-from app.models import Card, Player, Game
 
 import pytest
 from app.api import create_app
 from app.games.connections import GameConnectionManager
-from app.models import Game, Player
+from app.models import Card, Game, Player
 from config import Config
 from fastapi.testclient import TestClient
-from pony.orm import db_session, flush
+from pony.orm import commit, db_session, flush
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
