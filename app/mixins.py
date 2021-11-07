@@ -32,12 +32,16 @@ class GameMixin(object):
 
         for victimName in VictimsNames:
             cards["victims"].append(
-                models.Card(type=CardType.VICTIM.value, name=victimName.value, game=self)
+                models.Card(
+                    type=CardType.VICTIM.value, name=victimName.value, game=self
+                )
             )
 
         for monsterName in MonstersNames:
             cards["monsters"].append(
-                models.Card(type=CardType.MONSTER.value, name=monsterName.value, game=self)
+                models.Card(
+                    type=CardType.MONSTER.value, name=monsterName.value, game=self
+                )
             )
 
         for roomName in RoomName:
