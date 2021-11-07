@@ -4,11 +4,11 @@ from typing import List
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
 from app.games.events import (BEGIN_GAME_EVENT, DICE_ROLL_EVENT,
-                              PLAYER_JOINED_EVENT, SOSPECHA_MADE_EVENT)
+                              PLAYER_JOINED_EVENT, SUSPICION_MADE_EVENT)
 from app.games.exceptions import (GameConnectionDoesNotExist,
                                   PlayerAlreadyConnected)
 from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
-                               SospecharSchema, joinGameSchema)
+                               SuspectSchema, joinGameSchema)
 from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
@@ -172,10 +172,10 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
         return dict
 
 
-@router.post("/{gameId}/sospechar/{playerId}")
+@router.post("/{gameId}/suspect/{playerId}")
 @isPlayersTurn
-async def sospechar(
-    gameId: int, playerId: int, schema: SospecharSchema, response: Response
+async def suspect(
+    gameId: int, playerId: int, schema: SuspectSchema, response: Response
 ):
 
     with db_session:
@@ -201,7 +201,7 @@ async def sospechar(
         await manager.broadcastToGame(
             gameId,
             {
-                "type": SOSPECHA_MADE_EVENT,
+                "type": SUSPICION_MADE_EVENT,
                 "payload": {
                     "playerId": playerId,
                     "card1Name": schema.card1Name,

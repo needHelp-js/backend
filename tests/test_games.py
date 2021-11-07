@@ -236,13 +236,13 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
     }
 
 
-def test_sospechar_success(client, dataCards):
+def test_suspect_success(client, dataCards):
 
     manager.createGameConnection(1)
 
     with client.websocket_connect("/games/1/ws/1") as websocket:
         response = client.post(
-            "/games/1/sospechar/1",
+            "/games/1/suspect/1",
             json={"card1Name": "Conde", "card2Name": "Drácula"},
         )
         assert response.status_code == 204
@@ -255,10 +255,10 @@ def test_sospechar_success(client, dataCards):
         }
 
 
-def test_sospechar_card1NoExists(client, dataCards):
+def test_suspect_card1NoExists(client, dataCards):
 
     response = client.post(
-        "/games/1/sospechar/1",
+        "/games/1/suspect/1",
         json={"card1Name": "Perro", "card2Name": "Condesa"},
     )
 
@@ -266,10 +266,10 @@ def test_sospechar_card1NoExists(client, dataCards):
     assert response.json() == {"Error": "La carta Perro no existe"}
 
 
-def test_sospechar_card2NoExists(client, dataCards):
+def test_suspect_card2NoExists(client, dataCards):
 
     response = client.post(
-        "/games/1/sospechar/1",
+        "/games/1/suspect/1",
         json={"card1Name": "Condesa", "card2Name": "Gato"},
     )
 
@@ -277,10 +277,10 @@ def test_sospechar_card2NoExists(client, dataCards):
     assert response.json() == {"Error": "La carta Gato no existe"}
 
 
-def test_sospechar_twoVictimas(client, dataCards):
+def test_suspect_twoVictimas(client, dataCards):
 
     response = client.post(
-        "/games/1/sospechar/1",
+        "/games/1/suspect/1",
         json={"card1Name": "Conde", "card2Name": "Condesa"},
     )
 
@@ -288,10 +288,10 @@ def test_sospechar_twoVictimas(client, dataCards):
     assert response.json() == {"Error": "Debes mandar una victima y un monstruo"}
 
 
-def test_sospechar_noCurrentTurn(client, dataCards):
+def test_suspect_noCurrentTurn(client, dataCards):
 
     response = client.post(
-        "/games/1/sospechar/2",
+        "/games/1/suspect/2",
         json={"card1Name": "Conde", "card2Name": "Condesa"},
     )
 

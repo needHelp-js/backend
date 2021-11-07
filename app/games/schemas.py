@@ -16,6 +16,6 @@ class joinGameSchema(BaseModel):
     playerNickname: str
 
 
-class SospecharSchema(BaseModel):
+class SuspectSchema(BaseModel):
     card1Name: str
     card2Name: str
