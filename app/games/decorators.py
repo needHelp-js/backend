@@ -69,9 +69,8 @@ def isPlayersTurn(f):
         with db_session:
 
             player = Player[kargs["playerId"]]
-            game = Game[kargs["gameId"]]
 
-            if player.turnOrder != game.currentTurn:
+            if player.turnOrder != player.currentGame.currentTurn:
                 kargs["response"].status_code = status.HTTP_403_FORBIDDEN
                 return {"Error": "No es el turno del jugador"}
 
