@@ -123,6 +123,7 @@ def beginGameData():
         g2.players.add([p3, p4])
         g3.players.add(p5)
 
+
 @pytest.fixture
 def boardData():
     with db_session:

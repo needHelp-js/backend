@@ -196,8 +196,22 @@ def test_getGameDetails_success(client, dataListGames):
         "name": "g1",
         "started": False,
         "currentTurn": 0,
-        "players": [{"id": 0, "nickname": "p0", "position": None, "room": None, "turnOrder": None}],
-        "host": {"id": 0, "nickname": "p0", "position": None, "room": None, "turnOrder": None},
+        "players": [
+            {
+                "id": 0,
+                "nickname": "p0",
+                "position": None,
+                "room": None,
+                "turnOrder": None,
+            }
+        ],
+        "host": {
+            "id": 0,
+            "nickname": "p0",
+            "position": None,
+            "room": None,
+            "turnOrder": None,
+        },
     }
 
 
@@ -214,8 +228,16 @@ def test_getGameDetails_startedGame(client, dataListGames):
         "name": "g1",
         "started": True,
         "currentTurn": 1,
-        "players": [{"id": 0, "nickname": "p0", "position": 6, "room": None, "turnOrder": 1}],
-        "host": {"id": 0, "nickname": "p0", "position": 6, "room": None, "turnOrder": 1},
+        "players": [
+            {"id": 0, "nickname": "p0", "position": 6, "room": None, "turnOrder": 1}
+        ],
+        "host": {
+            "id": 0,
+            "nickname": "p0",
+            "position": 6,
+            "room": None,
+            "turnOrder": 1,
+        },
     }
 
 
@@ -232,5 +254,11 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
             {"id": 1, "nickname": "p1", "position": None, "room": None, "turnOrder": 1},
             {"id": 2, "nickname": "p2", "position": None, "room": None, "turnOrder": 2},
         ],
-        "host": {"id": 1, "nickname": "p1", "position": None, "room": None, "turnOrder": 1},
+        "host": {
+            "id": 1,
+            "nickname": "p1",
+            "position": None,
+            "room": None,
+            "turnOrder": 1,
+        },
     }

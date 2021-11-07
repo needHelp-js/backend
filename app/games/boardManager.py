@@ -1,6 +1,7 @@
 from typing import Tuple, List
 from app.models import Player
 
+
 class Room:
     def __init__(self, id, name, entries):
         self.id = id
@@ -18,8 +19,8 @@ class BoardManager:
     def createBoard(self):
         """Crea y configura las cosas iniciales del tablero
 
-        Modela el tablero con una matriz de tamaño 20x20, marcando con '.' las casillas por donde los jugadores 
-        pueden moverse, y con '#' las entradas a los recintos. 
+        Modela el tablero con una matriz de tamaño 20x20, marcando con '.' las casillas por donde los jugadores
+        pueden moverse, y con '#' las entradas a los recintos.
 
         También se le da un ID a cada casilla de la matriz, para así poder guardar la posición de los jugadores
         en la base de datos.
@@ -89,7 +90,7 @@ class BoardManager:
 
         return self._boardId[position[0]][position[1]]
 
-    def getPositionTupleFromId(self, id: int): 
+    def getPositionTupleFromId(self, id: int):
         """Obtiene a partir del ID de la casilla, la tupla (x, y) que representa su posición en la matriz
 
         Args:

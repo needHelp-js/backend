@@ -178,7 +178,9 @@ async def availablePositions(
             return {"Error": "No es el turno del jugador"}
 
         else:
-            availablePositions, availableRooms = board.checkIfPlayerInRoom(player, diceNumber)
+            availablePositions, availableRooms = board.checkIfPlayerInRoom(
+                player, diceNumber
+            )
             return {
                 "availablePositions": availablePositions,
                 "availableRooms": availableRooms,

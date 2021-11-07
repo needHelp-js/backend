@@ -10,29 +10,30 @@ from app.games.endpoints import availablePositions, board
 from app.models import Player
 from pony.orm import db_session
 
+
 def test_createBoard():
     board.createBoard()
 
-    for i in range (20):
-        if (i == 2 or i == 10 or i == 15):
+    for i in range(20):
+        if i == 2 or i == 10 or i == 15:
             assert board._board[i][6] == "#"
-        elif (i == 4 or i == 10 or i == 16):
+        elif i == 4 or i == 10 or i == 16:
             assert board._board[i][13] == "#"
         else:
             assert board._board[i][6] == "."
             assert board._board[i][13] == "."
 
     for k in range(20):
-        if (k == 4 or k == 10 or k == 15):
+        if k == 4 or k == 10 or k == 15:
             assert board._board[6][k] == "#"
-        elif (k == 3 or k == 10 or k == 16):
+        elif k == 3 or k == 10 or k == 16:
             assert board._board[13][k] == "#"
         else:
             assert board._board[6][k] == "."
             assert board._board[13][k] == "."
-    
+
     for i in range(8):
-        assert i+1 == board._rooms[i].id
+        assert i + 1 == board._rooms[i].id
 
 
 def test_getPositionIdFromTuple_success():
@@ -197,6 +198,7 @@ def test_moveDown():
     assert [] == availablePositions
     assert [] == availableRooms
 
+
 def test_calculatePositions():
     availablePositions, availableRooms = board.calculatePositions(0, 0, 6)
     assert [] == availablePositions
@@ -213,7 +215,8 @@ def test_calculatePositions():
     availablePositions, availableRooms = board.calculatePositions(2, 6, 2)
     assert [(2, 6), (1, 6), (0, 6), (3, 6), (4, 6)] == availablePositions
     assert ["COCHERA"] == availableRooms
-    
+
+
 def test_checkIfPlayerInRoom(app, boardData):
     with db_session:
 
@@ -227,11 +230,13 @@ def test_checkIfPlayerInRoom(app, boardData):
         assert [(0, 6), (1, 6), (2, 6)] == availablePositions
         assert [] == availableRooms
 
+
 def test_checkPosition_success(app, boardData):
     with db_session:
 
         p2 = Player.get(id=2)
         assert board.checkPosition(p2, 2, (2, 6))
+
 
 def test_checkPosition_fail(app, boardData):
     with db_session:
@@ -239,11 +244,13 @@ def test_checkPosition_fail(app, boardData):
         p2 = Player.get(id=2)
         assert board.checkPosition(p2, 2, (2, 6))
 
+
 def test_checkRoom_success(app, boardData):
     with db_session:
 
         p2 = Player.get(id=2)
         assert board.checkRoom(p2, 6, "COCHERA")
+
 
 def test_checkRoom_fail(app, boardData):
     with db_session:
