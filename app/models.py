@@ -23,6 +23,7 @@ class Player(db.Entity):
     currentGame = Optional(Game, reverse="players")
     hostedGame = Optional(Game, reverse="host")
     cards = Set("Card")
+    room = Optional(int)
 
 
 def checkCardType(val):

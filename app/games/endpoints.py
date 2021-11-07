@@ -3,9 +3,19 @@ from typing import List
 
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, playerInGame
-from app.games.events import BEGIN_GAME_EVENT, DICE_ROLL_EVENT, PLAYER_JOINED_EVENT
+from app.games.events import (
+    BEGIN_GAME_EVENT,
+    DICE_ROLL_EVENT,
+    PLAYER_JOINED_EVENT,
+    SOSPECHA_MADE_EVENT,
+)
 from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
-from app.games.schemas import AvailableGameSchema, CreateGameSchema, SospecharSchema, joinGameSchema
+from app.games.schemas import (
+    AvailableGameSchema,
+    CreateGameSchema,
+    SospecharSchema,
+    joinGameSchema,
+)
 from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
@@ -197,7 +207,20 @@ async def sospechar(
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"Error": "Debes mandar una victima y un monstruo"}
 
-        return {"Success": "Se mandaron correctamente las cartas"}
+        response.status_code = status.HTTP_204_NO_CONTENT
+        await manager.broadcastToGame(
+            gameId,
+            {
+                "type": SOSPECHA_MADE_EVENT,
+                "payload": {
+                    "playerId": playerId,
+                    "card1Name": schema.card1Name,
+                    "card2Name": schema.card2Name,
+                    "roomId": player.room,
+                },
+            },
+        )
+
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
 async def createWebsocketConnection(gameId: int, playerId: int, websocket: WebSocket):

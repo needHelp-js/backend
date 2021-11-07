@@ -196,8 +196,8 @@ def test_getGameDetails_success(client, dataListGames):
         "name": "g1",
         "started": False,
         "currentTurn": 0,
-        "players": [{"id": 0, "nickname": "p0", "turnOrder": None}],
-        "host": {"id": 0, "nickname": "p0", "turnOrder": None},
+        "players": [{"id": 0, "nickname": "p0", "turnOrder": None, "room": None}],
+        "host": {"id": 0, "nickname": "p0", "turnOrder": None, "room": None},
         "cards": [],
     }
 
@@ -215,8 +215,8 @@ def test_getGameDetails_startedGame(client, dataListGames):
         "name": "g1",
         "started": True,
         "currentTurn": 1,
-        "players": [{"id": 0, "nickname": "p0", "turnOrder": 1}],
-        "host": {"id": 0, "nickname": "p0", "turnOrder": 1},
+        "players": [{"id": 0, "nickname": "p0", "turnOrder": 1, "room": None}],
+        "host": {"id": 0, "nickname": "p0", "turnOrder": 1, "room": None},
         "cards": [],
     }
 
@@ -231,22 +231,31 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
         "started": False,
         "currentTurn": 1,
         "players": [
-            {"id": 1, "nickname": "p1", "turnOrder": 1},
-            {"id": 2, "nickname": "p2", "turnOrder": 2},
+            {"id": 1, "nickname": "p1", "turnOrder": 1, "room": None},
+            {"id": 2, "nickname": "p2", "turnOrder": 2, "room": None},
         ],
-        "host": {"id": 1, "nickname": "p1", "turnOrder": 1},
+        "host": {"id": 1, "nickname": "p1", "turnOrder": 1, "room": None},
         "cards": [],
     }
 
 
 def test_sospechar_success(client, dataCards):
 
-    response = client.post(
-        "/games/1/sospechar/1",
-        json={"card1Name": "Conde", "card2Name": "Drácula"},
-    )
+    manager.createGameConnection(1)
 
-    assert response.json() == {"Success": "Se mandaron correctamente las cartas"}
+    with client.websocket_connect("/games/1/ws/1") as websocket:
+        response = client.post(
+            "/games/1/sospechar/1",
+            json={"card1Name": "Conde", "card2Name": "Drácula"},
+        )
+        assert response.status_code == 204
+        ans = websocket.receive_json()["payload"]
+        assert ans == {
+            "playerId": 1,
+            "card1Name": "Conde",
+            "card2Name": "Drácula",
+            "roomId": None,
+        }
 
 
 def test_sospechar_card1NoExists(client, dataCards):
@@ -271,7 +280,7 @@ def test_sospechar_card2NoExists(client, dataCards):
     assert response.json() == {"Error": "La carta Gato no existe"}
 
 
-def test_sospechar_twoVictima(client, dataCards):
+def test_sospechar_twoVictimas(client, dataCards):
 
     response = client.post(
         "/games/1/sospechar/1",
