@@ -3,12 +3,9 @@ from typing import List
 
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, playerInGame
-from app.games.events import (BEGIN_GAME_EVENT, DICE_ROLL_EVENT,
-                              PLAYER_JOINED_EVENT)
-from app.games.exceptions import (GameConnectionDoesNotExist,
-                                  PlayerAlreadyConnected)
-from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
-                               joinGameSchema)
+from app.games.events import BEGIN_GAME_EVENT, DICE_ROLL_EVENT, PLAYER_JOINED_EVENT
+from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
+from app.games.schemas import AvailableGameSchema, CreateGameSchema, joinGameSchema
 from app.models import Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
@@ -160,7 +157,9 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
 
         game = Game.get(id=gameId)
 
-        dict = game.to_dict(related_objects=True, with_collections=True)
+        dict = game.to_dict(
+            related_objects=True, with_collections=True, exclude=["cards"]
+        )
         excluded_fields = ["hostedGame", "currentGame"]
 
         dict["players"] = [p.to_dict(exclude=excluded_fields) for p in dict["players"]]
