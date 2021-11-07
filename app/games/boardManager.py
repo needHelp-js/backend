@@ -1,7 +1,6 @@
 from typing import Tuple, List
 from app.models import Player
 
-
 class Room:
     def __init__(self, id, name, entries):
         self.id = id

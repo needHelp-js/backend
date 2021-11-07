@@ -164,43 +164,30 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
 
 
 @router.get("/{gameID}/availablePositions/{playerID}")
+@gameRequired
+@playerInGame
 async def availablePositions(
     gameID: int, playerID: int, diceNumber: int, response: Response
 ):
     with db_session:
         game = Game.get(id=gameID)
         player = Player.get(id=playerID)
-        
-        if game is None:
-            response.status_code = status.HTTP_404_NOT_FOUND
-            return {"Error": "Partida no existente"}
-        
-        elif player is None:
-            response.status_code = status.HTTP_404_NOT_FOUND
-            return {"Error": "Jugador no existente"}
-        
-        elif game.currentTurn == player.turnOrder:
-            availablePositions, availableRooms = board.f(player, diceNumber)
-            return {"availablePositions": availablePositions, "availableRooms": availableRooms}
-        
-        else:
+
+        if game.currentTurn != player.turnOrder:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": "No es el turno del jugador"}
 
-@router.get("/{gameID}/positions")
-async def positions(gameID: int):
-    with db_session:
-        game = Game.get(id=gameID)
-        playerList = game.players
-        playerPositions = []
-        
-        for p in playerList:
-            position = board.getPositionTupleFromId(p.position)
-            playerPositions.append(position)
-        
-        return {"playerPositions": playerPositions}
+        else:
+            availablePositions, availableRooms = board.f(player, diceNumber)
+            return {
+                "availablePositions": availablePositions,
+                "availableRooms": availableRooms,
+            }
+
 
 @router.patch("/{gameID}/move/{playerID}")
+@gameRequired
+@playerInGame
 async def movePlayer(
     gameID: int,
     playerID: int,
@@ -212,15 +199,7 @@ async def movePlayer(
         game = Game.get(id=gameID)
         player = Player.get(id=playerID)
 
-        if game is None:
-            response.status_code = status.HTTP_404_NOT_FOUND
-            return {"Error": "Partida no existente"}
-
-        elif player is None:
-            response.status_code = status.HTTP_404_NOT_FOUND
-            return {"Error": "Jugador no existente"}
-
-        elif game.currentTurn != player.turnOrder:
+        if game.currentTurn != player.turnOrder:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": "No es el turno del jugador"}
 
