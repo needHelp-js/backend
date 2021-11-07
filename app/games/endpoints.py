@@ -178,7 +178,7 @@ async def availablePositions(
             return {"Error": "No es el turno del jugador"}
 
         else:
-            availablePositions, availableRooms = board.f(player, diceNumber)
+            availablePositions, availableRooms = board.checkIfPlayerInRoom(player, diceNumber)
             return {
                 "availablePositions": availablePositions,
                 "availableRooms": availableRooms,
@@ -216,7 +216,7 @@ async def movePlayer(
             elif data.room != "":
 
                 if board.checkRoom(player, data.diceNumber, data.room):
-                    player.room = board.getRoomID(data.room)
+                    player.room = board.getRoomId(data.room)
                     await manager.broadcastToGame(
                         game.id,
                         {

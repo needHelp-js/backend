@@ -47,7 +47,6 @@ class BoardManager:
         self._board[13][10] = "#"
         self._board[13][16] = "#"
 
-        # Hay alguna forma más bonita de hacerlo?
         room1 = Room(id=1, name="COCHERA", entries=[(2, 6)])
         self._rooms.append(room1)
         room2 = Room(id=2, name="ALCOBA", entries=[(6, 10)])
@@ -85,12 +84,12 @@ class BoardManager:
             position: tupla que representa la posición (x, y) en la matriz del tablero
         """
 
-        if position[0] < 1 or position[0] > 19 or position[1] < 0 or position[1] > 19:
-            return -1
+        if position[0] < 0 or position[0] > 19 or position[1] < 0 or position[1] > 19:
+            return None
 
         return self._boardId[position[0]][position[1]]
 
-    def getPositionTupleFromId(self, id: int):
+    def getPositionTupleFromId(self, id: int): 
         """Obtiene a partir del ID de la casilla, la tupla (x, y) que representa su posición en la matriz
 
         Args:
@@ -98,11 +97,11 @@ class BoardManager:
         """
 
         if id < 0 or id > 399:
-            return -1, -1
+            return None
 
         return self._boardTuples[id][0], self._boardTuples[id][1]
 
-    def getRoomID(self, roomName):
+    def getRoomId(self, roomName):
         """Obtiene el ID de un recinto a través de su nombre
 
         Args:
@@ -113,7 +112,7 @@ class BoardManager:
             if r.name == roomName:
                 return r.id
 
-        return -1
+        return None
 
     def getRoomName(self, roomId):
         """Obtiene el nombre de un recinto a partir de su ID
@@ -126,7 +125,7 @@ class BoardManager:
             if r.id == roomId:
                 return r.name
 
-        return ""
+        return None
 
     def detectRoom(self, y: int, x: int):
         """Detecta a qué recinto puede acceder un jugador
@@ -367,7 +366,7 @@ class BoardManager:
 
         return availablePositions, availableRooms
 
-    def f(self, player: Player, diceNumber):
+    def checkIfPlayerInRoom(self, player: Player, diceNumber):
         """Se encarga de chequear si el jugador se encuentra en un recinto.
 
         En caso de que el jugador se encuentre en un recinto, entonces calcula todas las casillas
@@ -394,6 +393,7 @@ class BoardManager:
                 if diceNumber == 1:
                     availablePositions.append((y, x))
                 else:
+                    availablePositions.append((y, x))
                     l1, l2 = self.calculatePositions(y, x, diceNumber - 1)
                     availablePositions.extend(l1)
                     availableRooms.extend(l2)
@@ -419,14 +419,14 @@ class BoardManager:
             position: posición a la que el jugador quiere moverse
         """
 
-        availablePositions, _ = self.f(player, diceNumber)
+        availablePositions, _ = self.checkIfPlayerInRoom(player, diceNumber)
 
         if tuple(position) in availablePositions:
             return True
 
         return False
 
-    def checkRoom(self, player: Player, diceNumber, room):
+    def checkRoom(self, player: Player, diceNumber, room: str):
         """Chequea si el recinto al que un jugador quiere entrar está dentro de sus recintos disponibles
 
         Args:
@@ -435,7 +435,7 @@ class BoardManager:
             room: recinto al que el jugador quiere entrar
         """
 
-        _, availableRooms = self.f(player, diceNumber)
+        _, availableRooms = self.checkIfPlayerInRoom(player, diceNumber)
 
         if room in availableRooms:
             return True

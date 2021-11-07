@@ -122,3 +122,9 @@ def beginGameData():
         g1.players.add([p1, p2])
         g2.players.add([p3, p4])
         g3.players.add(p5)
+
+@pytest.fixture
+def boardData():
+    with db_session:
+        p1 = Player(id=1, nickname="p1", room=1)
+        p2 = Player(id=2, nickname="p2", position=6)
