@@ -129,15 +129,15 @@ def dataCards():
     with db_session:
         p1 = Player(id=1, nickname="p1", turnOrder=1)
         p2 = Player(id=2, nickname="p2", turnOrder=2)
-        g1 = Game(id=1, name='g1', host=p1, currentTurn=1)
+        g1 = Game(id=1, name="g1", host=p1, currentTurn=1)
 
-        c1 = Card(id=1, type='victima', name='Conde',game=g1)
-        c2 = Card(id=2, type='victima', name='Condesa',game=g1)
-        c3 = Card(id=3, type='monstruo', name='Drácula',game=g1)
-        c4 = Card(id=4, type='monstruo', name='Hombre Lobo',game=g1)
-        c5 = Card(id=5, type='recinto', name='Cochera',game=g1)
-        c6 = Card(id=6, type='recinto', name='Panteón',game=g1)
+        c1 = Card(id=1, type="victima", name="Conde", game=g1)
+        c2 = Card(id=2, type="victima", name="Condesa", game=g1)
+        c3 = Card(id=3, type="monstruo", name="Drácula", game=g1)
+        c4 = Card(id=4, type="monstruo", name="Hombre Lobo", game=g1)
+        c5 = Card(id=5, type="recinto", name="Cochera", game=g1)
+        c6 = Card(id=6, type="recinto", name="Panteón", game=g1)
 
         flush()
 
-        g1.players.add([p1,p2])
+        g1.players.add([p1, p2])
