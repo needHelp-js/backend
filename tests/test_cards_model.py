@@ -28,9 +28,9 @@ def test_createGameCards(app):
 
         card_set = set()
 
-        victims_names = set(name for name in VictimsNames)
-        monsters_names = set(name for name in MonstersNames)
-        rooms_names = set(name for name in RoomName)
+        victims_names = set(name.value for name in VictimsNames)
+        monsters_names = set(name.value for name in MonstersNames)
+        rooms_names = set(name.value for name in RoomName)
 
         for card in cards["victims"]:
             assert card.type == CardType.VICTIM.value
@@ -63,13 +63,17 @@ def test_createGameCards(app):
 
         assert len(card_set) == len(rooms_names)
 
-        envelope = Card.filter(isInEnvelope=True).all()
+        envelope = g1.cards.filter(isInEnvelope=True)[:]
 
         assert len(envelope) == 3
-        assert envelope[0].type != envelope[1].type != envelope[2].type != envelope[0].type
-        assert envelope[0].name != envelope[1].name != envelope[2].name != envelope[0].name
+        assert (
+            envelope[0].type != envelope[1].type != envelope[2].type != envelope[0].type
+        )
+        assert (
+            envelope[0].name != envelope[1].name != envelope[2].name != envelope[0].name
+        )
 
-        card_types = set(card_type for card_type in CardType)
+        card_types = set(card_type.value for card_type in CardType)
 
         for card in envelope:
             assert card.type in card_types

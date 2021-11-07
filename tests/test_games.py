@@ -206,12 +206,10 @@ def test_getGameDetails_startedGame(client, dataListGames):
     with db_session:
         g1 = Game[1]
         g1.startGame()
-        cards = [card.to_dict() for card in g1.cards]
 
     response = client.get("/games/1", params={"playerId": 0})
 
     assert response.json() == {
-        "cards": cards,
         "id": 1,
         "name": "g1",
         "started": True,
@@ -226,7 +224,6 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
     response = client.get("/games/1", params={"playerId": 1})
 
     assert response.json() == {
-        "cards": [],
         "id": 1,
         "name": "g1",
         "started": False,
