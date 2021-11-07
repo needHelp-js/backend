@@ -160,7 +160,7 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
 
         game = Game.get(id=gameId)
 
-        dict = game.to_dict(related_objects=True, with_collections=True)
+        dict = game.to_dict(related_objects=True, with_collections=True, exclude="cards")
         excluded_fields = ["hostedGame", "currentGame"]
 
         dict["players"] = [p.to_dict(exclude=excluded_fields) for p in dict["players"]]

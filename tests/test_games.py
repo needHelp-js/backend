@@ -197,8 +197,7 @@ def test_getGameDetails_success(client, dataListGames):
         "started": False,
         "currentTurn": 0,
         "players": [{"id": 0, "nickname": "p0", "turnOrder": None, "room": None}],
-        "host": {"id": 0, "nickname": "p0", "turnOrder": None, "room": None},
-        "cards": [],
+        "host": {"id": 0, "nickname": "p0", "turnOrder": None, "room": None}
     }
 
 
@@ -216,8 +215,7 @@ def test_getGameDetails_startedGame(client, dataListGames):
         "started": True,
         "currentTurn": 1,
         "players": [{"id": 0, "nickname": "p0", "turnOrder": 1, "room": None}],
-        "host": {"id": 0, "nickname": "p0", "turnOrder": 1, "room": None},
-        "cards": [],
+        "host": {"id": 0, "nickname": "p0", "turnOrder": 1, "room": None}
     }
 
 
@@ -234,8 +232,7 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
             {"id": 1, "nickname": "p1", "turnOrder": 1, "room": None},
             {"id": 2, "nickname": "p2", "turnOrder": 2, "room": None},
         ],
-        "host": {"id": 1, "nickname": "p1", "turnOrder": 1, "room": None},
-        "cards": [],
+        "host": {"id": 1, "nickname": "p1", "turnOrder": 1, "room": None}
     }
 
 
