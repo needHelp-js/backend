@@ -53,3 +53,28 @@ def playerInGame(f):
             return await f(*args, **kargs)
 
     return fWrapper
+
+
+def isPlayersTurn(f):
+    """
+    Decorator that checks if it's the player's turn.
+    This decorator already calls @gameRequired and @playerInGame.
+    """
+
+    @functools.wraps(f)
+    @gameRequired
+    @playerInGame
+    async def fWrapper(*args, **kargs):
+
+        with db_session:
+
+            player = Player[kargs["playerId"]]
+            game = Game[kargs["gameId"]]
+
+            if player.turnOrder != game.currentTurn:
+                kargs["response"].status_code = status.HTTP_403_FORBIDDEN
+                return {"Error": "No es el turno del jugador"}
+
+            return await f(*args, **kargs)
+
+    return fWrapper

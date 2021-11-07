@@ -2,13 +2,20 @@ from random import randint
 from typing import List
 
 from app.games.connections import GameConnectionManager
-from app.games.decorators import gameRequired, playerInGame
-from app.games.events import (BEGIN_GAME_EVENT, DICE_ROLL_EVENT,
-                              PLAYER_JOINED_EVENT, SOSPECHA_MADE_EVENT)
-from app.games.exceptions import (GameConnectionDoesNotExist,
-                                  PlayerAlreadyConnected)
-from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
-                               SospecharSchema, joinGameSchema)
+from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
+from app.games.events import (
+    BEGIN_GAME_EVENT,
+    DICE_ROLL_EVENT,
+    PLAYER_JOINED_EVENT,
+    SOSPECHA_MADE_EVENT,
+)
+from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
+from app.games.schemas import (
+    AvailableGameSchema,
+    CreateGameSchema,
+    SospecharSchema,
+    joinGameSchema,
+)
 from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
@@ -160,7 +167,9 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
 
         game = Game.get(id=gameId)
 
-        dict = game.to_dict(related_objects=True, with_collections=True, exclude="cards")
+        dict = game.to_dict(
+            related_objects=True, with_collections=True, exclude="cards"
+        )
         excluded_fields = ["hostedGame", "currentGame"]
 
         dict["players"] = [p.to_dict(exclude=excluded_fields) for p in dict["players"]]
@@ -171,19 +180,14 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
 
 
 @router.post("/{gameId}/sospechar/{playerId}")
-@gameRequired
-@playerInGame
+@isPlayersTurn
 async def sospechar(
     gameId: int, playerId: int, schema: SospecharSchema, response: Response
 ):
 
     with db_session:
-        player = Player[playerId]
-        game = Game[gameId]
 
-        if player.turnOrder != game.currentTurn:
-            response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": "No es el turno del jugador"}
+        player = Player[playerId]
 
         card1 = Card.get(lambda c: c.game.id == gameId and c.name == schema.card1Name)
         card2 = Card.get(lambda c: c.game.id == gameId and c.name == schema.card2Name)

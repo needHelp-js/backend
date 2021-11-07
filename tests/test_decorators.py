@@ -1,6 +1,6 @@
-from app.games.decorators import gameRequired, playerInGame
+from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
 from app.models import Game, Player
-from fastapi import Response
+from fastapi import Response, status
 from pony.orm.core import db_session, flush
 from starlette.testclient import TestClient
 
@@ -88,3 +88,28 @@ def test_playerInGame_playerInOtherGame(app, dataTirarDado):
     result = client.get("/test", params={"gameId": 1, "playerId": 4})
     assert result.status_code == 403
     assert result.json() == {"Error": "El jugador 4 no esta en la partida 1."}
+
+
+def test_isPlayersTurn_success(app, dataTirarDado):
+    @app.get("/test")
+    @isPlayersTurn
+    async def decoratedFunc(gameId: int, playerId: int, response: Response):
+        return {"Success": "success"}
+
+    client = TestClient(app)
+
+    result = client.get("/test", params={"gameId": 1, "playerId": 1})
+    assert result.json() == {"Success": "success"}
+
+
+def test_isPlayersTurn_noCurrentTurn(app, dataTirarDado):
+    @app.get("/test")
+    @isPlayersTurn
+    async def decoratedFunc(gameId: int, playerId: int, response: Response):
+        return {"Success": "success"}
+
+    client = TestClient(app)
+
+    result = client.get("/test", params={"gameId": 1, "playerId": 2})
+    assert result.status_code == status.HTTP_403_FORBIDDEN
+    assert result.json() == {"Error": "No es el turno del jugador"}
