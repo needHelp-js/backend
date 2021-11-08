@@ -247,6 +247,67 @@ async def suspect(
             )
 
 
+@router.post("/{gameId}/replySuspect/{playerId}")
+@gameRequired
+@playerInGame
+async def replySuspect(
+    gameId: int, playerId: int, schema: ReplySuspectSchema, response: Response
+):
+
+    with db_session:
+
+        game = Game[gameId]
+        player = Player[playerId]
+
+        card = Card.get(lambda c: c.game.id == gameId and c.name == schema.cardName)
+
+        if card == None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": f"La carta {schema.cardName} no existe"}
+
+        if card not in player.cards:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {
+                "Error": f"El jugador {playerId} no tiene la carta {schema.cardName}"
+            }
+
+        # We now know that the selected card is valid and the player has it.
+
+        repliedPlayer = Player.get(id=schema.replyToPlayerId)
+
+        if repliedPlayer == None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": f"El jugador {schema.replyToPlayerId} no existe"}
+
+        if repliedPlayer.currentGame != game:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {
+                "Error": f"El jugador {schema.replyToPlayerId} no está en la partida {gameId}"
+            }
+
+        if not repliedPlayer.isSuspecting:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": f"El jugador {schema.replyToPlayerId} no está sospechando."}
+
+        # We now know the replied player exists, it's on the same game as playerId and they are suspecting.
+
+        response.status_code = status.HTTP_204_NO_CONTENT
+        manager.sendToPlayer(
+            gameId,
+            schema.replyToPlayerId,
+            {
+                "type": SUSPICION_RESPONSE_EVENT,
+                "payload": {"playerId": playerId, "cardName": schema.cardName},
+            },
+        )
+
+        game.incrementTurn()
+        currentPlayerId = game.players.get(turnOrder=game.currentTurn)
+        manager.broadcastToGame(
+            gameId, {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayerId}}
+        )
+
+
 @router.websocket("/games/{gameId}/ws/{playerId}")
 async def createWebsocketConnection(gameId: int, playerId: int, websocket: WebSocket):
     await websocket.accept()

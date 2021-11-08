@@ -19,3 +19,7 @@ class joinGameSchema(BaseModel):
 class SuspectSchema(BaseModel):
     card1Name: str
     card2Name: str
+
+class ReplySuspectSchema(BaseModel):
+    replyToPlayerId: int
+    cardName: str
