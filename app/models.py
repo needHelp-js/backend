@@ -24,6 +24,7 @@ class Player(db.Entity):
     hostedGame = Optional(Game, reverse="host")
     cards = Set("Card")
     room = Optional(int)
+    isSuspecting = Required(bool, default=False)
 
 
 def checkCardType(val):

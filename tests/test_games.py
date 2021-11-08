@@ -196,8 +196,22 @@ def test_getGameDetails_success(client, dataListGames):
         "name": "g1",
         "started": False,
         "currentTurn": 0,
-        "players": [{"id": 0, "nickname": "p0", "turnOrder": None, "room": None}],
-        "host": {"id": 0, "nickname": "p0", "turnOrder": None, "room": None},
+        "players": [
+            {
+                "id": 0,
+                "nickname": "p0",
+                "turnOrder": None,
+                "room": None,
+                "isSuspecting": False,
+            }
+        ],
+        "host": {
+            "id": 0,
+            "nickname": "p0",
+            "turnOrder": None,
+            "room": None,
+            "isSuspecting": False,
+        },
     }
 
 
@@ -214,8 +228,22 @@ def test_getGameDetails_startedGame(client, dataListGames):
         "name": "g1",
         "started": True,
         "currentTurn": 1,
-        "players": [{"id": 0, "nickname": "p0", "turnOrder": 1, "room": None}],
-        "host": {"id": 0, "nickname": "p0", "turnOrder": 1, "room": None},
+        "players": [
+            {
+                "id": 0,
+                "nickname": "p0",
+                "turnOrder": 1,
+                "room": None,
+                "isSuspecting": False,
+            }
+        ],
+        "host": {
+            "id": 0,
+            "nickname": "p0",
+            "turnOrder": 1,
+            "room": None,
+            "isSuspecting": False,
+        },
     }
 
 
@@ -229,10 +257,28 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
         "started": False,
         "currentTurn": 1,
         "players": [
-            {"id": 1, "nickname": "p1", "turnOrder": 1, "room": None},
-            {"id": 2, "nickname": "p2", "turnOrder": 2, "room": None},
+            {
+                "id": 1,
+                "nickname": "p1",
+                "turnOrder": 1,
+                "room": None,
+                "isSuspecting": False,
+            },
+            {
+                "id": 2,
+                "nickname": "p2",
+                "turnOrder": 2,
+                "room": None,
+                "isSuspecting": False,
+            },
         ],
-        "host": {"id": 1, "nickname": "p1", "turnOrder": 1, "room": None},
+        "host": {
+            "id": 1,
+            "nickname": "p1",
+            "turnOrder": 1,
+            "room": None,
+            "isSuspecting": False,
+        },
     }
 
 
