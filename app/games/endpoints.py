@@ -1,14 +1,26 @@
+from os import stat
 from random import randint
 from typing import List
 
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
-from app.games.events import (BEGIN_GAME_EVENT, DICE_ROLL_EVENT,
-                              PLAYER_JOINED_EVENT, SUSPICION_MADE_EVENT)
-from app.games.exceptions import (GameConnectionDoesNotExist,
-                                  PlayerAlreadyConnected)
-from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
-                               SuspectSchema, joinGameSchema)
+from app.games.events import (
+    BEGIN_GAME_EVENT,
+    DICE_ROLL_EVENT,
+    PLAYER_JOINED_EVENT,
+    SUSPICION_MADE_EVENT,
+    SUSPICION_RESPONSE_EVENT,
+    TURN_ENDED_EVENT,
+    YOU_ARE_SUSPICIOUS_EVENT,
+)
+from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
+from app.games.schemas import (
+    AvailableGameSchema,
+    CreateGameSchema,
+    ReplySuspectSchema,
+    SuspectSchema,
+    joinGameSchema,
+)
 from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import db_session
@@ -101,7 +113,6 @@ async def getDice(gameID: int, playerID: int, response: Response):
             await manager.broadcastToGame(
                 gameID, {"type": DICE_ROLL_EVENT, "payload": ans}
             )
-            game.incrementTurn()
             response.status_code = status.HTTP_204_NO_CONTENT
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
@@ -182,16 +193,19 @@ async def suspect(
 
         player = Player[playerId]
 
-        card1 = Card.get(lambda c: c.game.id == gameId and c.name == schema.card1Name)
-        card2 = Card.get(lambda c: c.game.id == gameId and c.name == schema.card2Name)
+        card1Name = schema.card1Name
+        card2Name = schema.card2Name
+
+        card1 = Card.get(lambda c: c.game.id == gameId and c.name == card1Name)
+        card2 = Card.get(lambda c: c.game.id == gameId and c.name == card2Name)
 
         if card1 == None:
             response.status_code = status.HTTP_404_NOT_FOUND
-            return {"Error": f"La carta {schema.card1Name} no existe"}
+            return {"Error": f"La carta {card1Name} no existe"}
 
         if card2 == None:
             response.status_code = status.HTTP_404_NOT_FOUND
-            return {"Error": f"La carta {schema.card2Name} no existe"}
+            return {"Error": f"La carta {card2Name} no existe"}
 
         if {card1.type, card2.type} != {"victima", "monstruo"}:
             response.status_code = status.HTTP_400_BAD_REQUEST
@@ -204,12 +218,33 @@ async def suspect(
                 "type": SUSPICION_MADE_EVENT,
                 "payload": {
                     "playerId": playerId,
-                    "card1Name": schema.card1Name,
-                    "card2Name": schema.card2Name,
+                    "card1Name": card1Name,
+                    "card2Name": card2Name,
                     "roomId": player.room,
                 },
             },
         )
+
+        player.isSuspecting = True
+
+        game = Game[gameId]
+
+        responseInfo = game.findPlayerIdWithCards(cardNames=[card1Name, card2Name])
+
+        if responseInfo == None:
+            player.isSuspecting = False
+        else:
+            await manager.sendToPlayer(
+                gameId,
+                responseInfo["playerId"],
+                {
+                    "type": YOU_ARE_SUSPICIOUS_EVENT,
+                    "payload": {
+                        "playerId": playerId,
+                        "cards": responseInfo["cards"],
+                    },
+                },
+            )
 
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
