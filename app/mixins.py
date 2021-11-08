@@ -1,4 +1,7 @@
 from typing import List
+from app.enums import CardType, MonstersNames, RoomName, VictimsNames
+from app import models
+from random import randrange
 
 
 class GameMixin(object):
@@ -21,10 +24,38 @@ class GameMixin(object):
 
     def startGame(self):
         self.currentTurn = 1
+        self.createGameCards()
         self.setPlayersTurnOrder()
         self.started = True
 
-    #TODO: ENCONTRAR MEJOR NOMBRE
+    def createGameCards(self):
+        cards = {"victims": [], "monsters": [], "rooms": []}
+
+        for victimName in VictimsNames:
+            cards["victims"].append(
+                models.Card(
+                    type=CardType.VICTIM.value, name=victimName.value, game=self
+                )
+            )
+
+        for monsterName in MonstersNames:
+            cards["monsters"].append(
+                models.Card(
+                    type=CardType.MONSTER.value, name=monsterName.value, game=self
+                )
+            )
+
+        for roomName in RoomName:
+            cards["rooms"].append(
+                models.Card(type=CardType.ROOM.value, name=roomName.value, game=self)
+            )
+
+        cards["victims"][randrange(len(cards["victims"]))].isInEnvelope = True
+        cards["monsters"][randrange(len(cards["monsters"]))].isInEnvelope = True
+        cards["rooms"][randrange(len(cards["rooms"]))].isInEnvelope = True
+
+        return cards
+
     def findPlayerIdWithCards(self, cardNames: List[str]): 
         
         for player in self.players:
