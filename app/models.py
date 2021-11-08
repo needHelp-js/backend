@@ -1,7 +1,7 @@
 from pony.orm import *
 
 from app.enums import CardType, MonstersNames, RoomName, VictimsNames
-from app.mixins import GameMixin
+from app.mixins import GameMixin, PlayerMixin
 
 db = Database()
 
@@ -16,7 +16,7 @@ class Game(db.Entity, GameMixin):
     cards = Set("Card")
 
 
-class Player(db.Entity):
+class Player(db.Entity, PlayerMixin):
     id = PrimaryKey(int, auto=True)
     nickname = Required(str)
     turnOrder = Optional(int)
