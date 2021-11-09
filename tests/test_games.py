@@ -416,7 +416,7 @@ def test_suspect_success(client, dataSuspect):
             "playerId": 1,
             "card1Name": VictimsNames.CONDE.value,
             "card2Name": MonstersNames.DRACULA.value,
-            "roomName": None,
+            "roomName": RoomsNames.LABORATORIO.value,
         }
 
         ans = websocket2.receive_json()
@@ -425,7 +425,7 @@ def test_suspect_success(client, dataSuspect):
             "playerId": 1,
             "card1Name": VictimsNames.CONDE.value,
             "card2Name": MonstersNames.DRACULA.value,
-            "roomName": None,
+            "roomName": RoomsNames.LABORATORIO.value,
         }
 
         ans = websocket2.receive_json()
@@ -458,7 +458,7 @@ def test_suspect_success_otherPlayerWithCard(client, dataSuspect):
             "playerId": 1,
             "card1Name": VictimsNames.CONDE.value,
             "card2Name": MonstersNames.HOMBRE_LOBO.value,
-            "roomName": None,
+            "roomName": RoomsNames.LABORATORIO.value,
         }
 
         ans = websocket3.receive_json()
@@ -467,7 +467,7 @@ def test_suspect_success_otherPlayerWithCard(client, dataSuspect):
             "playerId": 1,
             "card1Name": VictimsNames.CONDE.value,
             "card2Name": MonstersNames.HOMBRE_LOBO.value,
-            "roomName": None,
+            "roomName": RoomsNames.LABORATORIO.value,
         }
 
         ans = websocket3.receive_json()
@@ -499,7 +499,7 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
             "playerId": 1,
             "card1Name": VictimsNames.MAYORDOMO.value,
             "card2Name": MonstersNames.HOMBRE_LOBO.value,
-            "roomName": None,
+            "roomName": RoomsNames.LABORATORIO.value,
         }
 
         ans = websocket2.receive_json()
@@ -508,7 +508,7 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
             "playerId": 1,
             "card1Name": VictimsNames.MAYORDOMO.value,
             "card2Name": MonstersNames.HOMBRE_LOBO.value,
-            "roomName": None,
+            "roomName": RoomsNames.LABORATORIO.value,
         }
 
         ans = websocket1.receive_json()
@@ -529,12 +529,12 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
             assert not Player[1].isSuspecting
 
 
-def test_suspect_playerInRoom(client, dataSuspect):
+def test_suspect_playerInNoRoom(client, dataSuspect):
     manager.createGameConnection(1)
 
     with db_session:
         p1 = Player[1]
-        p1.room = 1  # COCHERA
+        p1.room = None
 
     with client.websocket_connect(
         "/games/1/ws/1"
@@ -547,34 +547,15 @@ def test_suspect_playerInRoom(client, dataSuspect):
                 "card2Name": MonstersNames.HOMBRE_LOBO.value,
             },
         )
-        assert response.status_code == 204
-        ans = websocket1.receive_json()
-        assert ans["type"] == SUSPICION_MADE_EVENT
-        assert ans["payload"] == {
-            "playerId": 1,
-            "card1Name": VictimsNames.MAYORDOMO.value,
-            "card2Name": MonstersNames.HOMBRE_LOBO.value,
-            "roomName": RoomsNames.COCHERA.value,
-        }
-
-        ans = websocket2.receive_json()
-        assert ans["type"] == SUSPICION_MADE_EVENT
-        assert ans["payload"] == {
-            "playerId": 1,
-            "card1Name": VictimsNames.MAYORDOMO.value,
-            "card2Name": MonstersNames.HOMBRE_LOBO.value,
-            "roomName": RoomsNames.COCHERA.value,
-        }
-
-        ans = websocket2.receive_json()
-        assert ans["type"] == YOU_ARE_SUSPICIOUS_EVENT
-        assert ans["payload"] == {"playerId": 1, "cards": [RoomsNames.COCHERA.value]}
-
-        with db_session:
-            assert Player[1].isSuspecting
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.json() == {"Error": f"El jugador 1 no está en ningun recinto"}
 
 
 def test_suspect_card1NoExists(client, dataCards):
+
+    with db_session:
+        p1 = Player[1]
+        p1.room = 8
 
     response = client.post(
         "/games/1/suspect/1",
@@ -587,6 +568,10 @@ def test_suspect_card1NoExists(client, dataCards):
 
 def test_suspect_card2NoExists(client, dataCards):
 
+    with db_session:
+        p1 = Player[1]
+        p1.room = 8
+
     response = client.post(
         "/games/1/suspect/1",
         json={"card1Name": VictimsNames.CONDESA.value, "card2Name": "Gato"},
@@ -597,6 +582,10 @@ def test_suspect_card2NoExists(client, dataCards):
 
 
 def test_suspect_twoVictimas(client, dataCards):
+
+    with db_session:
+        p1 = Player[1]
+        p1.room = 8
 
     response = client.post(
         "/games/1/suspect/1",

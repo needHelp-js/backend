@@ -201,3 +201,5 @@ def dataSuspect():
         p2.cards.add([c2, c3, c5])
         p3.cards.add(c1)
         p4.cards.add(c6)
+
+        p1.room = 8  # COCHERA

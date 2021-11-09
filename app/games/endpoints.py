@@ -304,6 +304,10 @@ async def suspect(
 
         player = Player[playerId]
 
+        if player.room is None:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": f"El jugador {playerId} no está en ningun recinto"}
+
         card1Name = schema.card1Name
         card2Name = schema.card2Name
 
@@ -342,13 +346,8 @@ async def suspect(
 
         game = Game[gameId]
 
-        cardNames = [card1Name, card2Name]
-
-        if playerRoom is not None:
-            cardNames.append(playerRoom)
-
         responseInfo = game.findPlayerIdWithCards(
-            cardNames=cardNames, fromPlayerId=playerId
+            cardNames=[card1Name, card2Name, playerRoom], fromPlayerId=playerId
         )
 
         if responseInfo is None:
