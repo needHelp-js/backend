@@ -150,7 +150,7 @@ def test_availablePositions_success(client, dataBoard):
     response = client.get("/games/1/availablePositions/1", params={"diceNumber": 3})
     assert response.json() == {
         "availablePositions": [[0, 6], [1, 6], [2, 6], [3, 6]],
-        "availableRooms": ["COCHERA"],
+        "availableRooms": ["Cochera"],
     }
 
 
@@ -171,13 +171,13 @@ def test_movePlayer_correctRoom(client, dataBoard):
     manager.createGameConnection(1)
     with client.websocket_connect("/games/1/ws/1") as websocket:
         response = client.patch(
-            "/games/1/move/1", json={"diceNumber": 3, "room": "COCHERA"}
+            "/games/1/move/1", json={"diceNumber": 3, "room": "Cochera"}
         )
         ans = websocket.receive_json()
         type = ans["type"]
         payload = ans["payload"]
         assert type == "ENTER_ROOM_EVENT"
-        assert payload == {"playerId": 1, "playerRoom": "COCHERA"}
+        assert payload == {"playerId": 1, "playerRoom": "Cochera"}
 
 
 def test_movePlayer_wrongRoom(client, dataBoard):

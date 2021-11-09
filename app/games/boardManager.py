@@ -1,5 +1,6 @@
 from typing import List, Tuple
 
+from app.enums import RoomName
 from app.models import Player
 
 
@@ -18,13 +19,13 @@ class BoardManager:
         self._boardId = [[]]
 
     def createBoard(self):
-        """Crea y configura las cosas iniciales del tablero
+        """Creates and configures the initials things for the board
 
-        Modela el tablero con una matriz de tamaño 20x20, marcando con '.' las casillas por donde los jugadores
-        pueden moverse, y con '#' las entradas a los recintos.
+        Models the board as a matrix of size 20x20, marking with '.' the availaible positions where the players
+        can move, and with '#' the room's entries.
 
-        También se le da un ID a cada casilla de la matriz, para así poder guardar la posición de los jugadores
-        en la base de datos.
+        It also gives an ID to each cell of the matrix, doing so able us to save the position of the players
+        in the data base.
         """
         self._board = [["*" for x in range(20)] for y in range(20)]
         for y in range(20):
@@ -49,21 +50,25 @@ class BoardManager:
         self._board[13][10] = "#"
         self._board[13][16] = "#"
 
-        room1 = Room(id=1, name="COCHERA", entries=[(2, 6)])
+        room1 = Room(id=1, name=RoomName.COCHERA.value, entries=[(2, 6)])
         self._rooms.append(room1)
-        room2 = Room(id=2, name="ALCOBA", entries=[(6, 10)])
+        room2 = Room(id=2, name=RoomName.ALCOBA.value, entries=[(6, 10)])
         self._rooms.append(room2)
-        room3 = Room(id=3, name="BIBLIOTECA", entries=[(4, 6)])
+        room3 = Room(id=3, name=RoomName.BIBLIOTECA.value, entries=[(4, 6)])
         self._rooms.append(room3)
-        room4 = Room(id=4, name="VESTIBULO", entries=[(6, 4), (10, 6), (13, 3)])
+        room4 = Room(
+            id=4, name=RoomName.VESTIBULO.value, entries=[(6, 4), (10, 6), (13, 3)]
+        )
         self._rooms.append(room4)
-        room5 = Room(id=5, name="PANTEON", entries=[(6, 15), (10, 13), (13, 16)])
+        room5 = Room(
+            id=5, name=RoomName.PANTEON.value, entries=[(6, 15), (10, 13), (13, 16)]
+        )
         self._rooms.append(room5)
-        room6 = Room(id=6, name="BODEGA", entries=[(15, 6)])
+        room6 = Room(id=6, name=RoomName.BODEGA.value, entries=[(15, 6)])
         self._rooms.append(room6)
-        room7 = Room(id=7, name="SALON", entries=[(13, 10)])
+        room7 = Room(id=7, name=RoomName.SALON.value, entries=[(13, 10)])
         self._rooms.append(room7)
-        room8 = Room(id=8, name="LABORATORIO", entries=[(16, 13)])
+        room8 = Room(id=8, name=RoomName.LABORATORIO.value, entries=[(16, 13)])
         self._rooms.append(room8)
 
         i = 0
@@ -80,10 +85,10 @@ class BoardManager:
                 i += 1
 
     def getPositionIdFromTuple(self, position: Tuple):
-        """Obtiene el ID de una casilla del tablero a partir de sus coordenadas x, y
+        """Get the ID of a cell in the board from its coordinates x and y
 
         Args:
-            position: tupla que representa la posición (x, y) en la matriz del tablero
+            position: a tuple which represent the position (x, y)
         """
 
         if position[0] < 0 or position[0] > 19 or position[1] < 0 or position[1] > 19:
@@ -92,10 +97,10 @@ class BoardManager:
         return self._boardId[position[0]][position[1]]
 
     def getPositionTupleFromId(self, id: int):
-        """Obtiene a partir del ID de la casilla, la tupla (x, y) que representa su posición en la matriz
+        """Get the tuple representing the position (x, y) of a cell in a matrix from its ID
 
         Args:
-            id: id único de la casilla
+            id: id of the cell
         """
         if id is None:
             return None
@@ -106,10 +111,10 @@ class BoardManager:
         return self._boardTuples[id][0], self._boardTuples[id][1]
 
     def getRoomId(self, roomName):
-        """Obtiene el ID de un recinto a través de su nombre
+        """Get the id of a room from its name
 
         Args:
-            roomName: nombre del recinto
+            roomName: name of the room
         """
 
         for r in self._rooms:
@@ -119,10 +124,10 @@ class BoardManager:
         return None
 
     def getRoomName(self, roomId):
-        """Obtiene el nombre de un recinto a partir de su ID
+        """Get the room's name from its ID
 
         Args:
-            roomId: ID del recinto
+            roomId: Id of the room
         """
 
         for r in self._rooms:
@@ -132,10 +137,10 @@ class BoardManager:
         return None
 
     def detectRoom(self, y: int, x: int):
-        """Detecta a qué recinto puede acceder un jugador
+        """Detect which room is available for the player
 
         Args:
-            y, x: representan la posición en el tablero de la entrada al recinto disponible
+            y, x: represent the position in the board of the room's entrie
         """
 
         for r in self._rooms:
@@ -143,13 +148,13 @@ class BoardManager:
                 return r.name
 
     def moveLeft(self, y, x, moves, availablePositions, availableRooms):
-        """Detecta todas las casillas y recintos que se encuentran disponibles a la izquierda del jugador
+        """Detects all the cells and rooms which are available to the left of the player.
 
         Args:
-            y, x: representan la posición a partir de donde se quiere realizar el cálculo de casillas
-            moves: cantidad de movimientos disponibles
-            availablePositions: lista que almacena las casillas disponibles
-            availableRooms: lista que almacena los recintos disponibles
+            y, x: represent the initial position of the player
+            moves: number of available moves
+            availablePositions: list for storing the available positions
+            availableRooms: list for storing the available rooms
         """
 
         x_AxisPosition, y_AxisPosition, remainingMoves = x - 1, y, moves - 1
@@ -191,13 +196,13 @@ class BoardManager:
             )
 
     def moveRight(self, y, x, moves, availablePositions, availableRooms):
-        """Detecta todas las casillas y recintos que se encuentran disponibles a la derecha del jugador
+        """Detects all the cells and rooms which are available to the right of the player.
 
         Args:
-            y, x: representan la posición a partir de donde se quiere realizar el cálculo de casillas
-            moves: cantidad de movimientos disponibles
-            availablePositions: lista que almacena las casillas disponibles
-            availableRooms: lista que almacena los recintos disponibles
+            y, x: represent the initial position of the player
+            moves: number of available moves
+            availablePositions: list for storing the available positions
+            availableRooms: list for storing the available rooms
         """
 
         x_AxisPosition, y_AxisPosition, remainingMoves = x + 1, y, moves - 1
@@ -239,13 +244,13 @@ class BoardManager:
             )
 
     def moveUp(self, y, x, moves, availablePositions, availableRooms):
-        """Detecta todas las casillas y recintos que se encuentran arriba de la posición del jugador
+        """Detects all the cells and rooms which are available above the player.
 
         Args:
-            y, x: representan la posición a partir de donde se quiere realizar el cálculo de casillas
-            moves: cantidad de movimientos disponibles
-            availablePositions: lista que almacena las casillas disponibles
-            availableRooms: lista que almacena los recintos disponibles
+            y, x: represent the initial position of the player
+            moves: number of available moves
+            availablePositions: list for storing the available positions
+            availableRooms: list for storing the available rooms
         """
 
         x_AxisPosition, y_AxisPosition, remainingMoves = x, y - 1, moves - 1
@@ -287,13 +292,13 @@ class BoardManager:
             )
 
     def moveDown(self, y, x, moves, availablePositions, availableRooms):
-        """Detecta todas las casillas y recintos que se encuentran debajo de la posición jugador
+        """Detects all the cells and rooms which are available below the player.
 
         Args:
-            y, x: representan la posición a partir de donde se quiere realizar el cálculo de casillas
-            moves: cantidad de movimientos disponibles
-            availablePositions: lista que almacena las casillas disponibles
-            availableRooms: lista que almacena los recintos disponibles
+            y, x: represent the initial position of the player
+            moves: number of available moves
+            availablePositions: list for storing the available positions
+            availableRooms: list for storing the available rooms
         """
 
         x_AxisPosition, y_AxisPosition, remainingMoves = x, y + 1, moves - 1
@@ -335,11 +340,11 @@ class BoardManager:
             )
 
     def _calculateAvailablePositions(self, y, x, diceNumber):
-        """Calcula todas las casillas a las que se puede mover un jugador según el número que obtuvó en el dado
+        """Calculate all the cells availables for a player
 
         Args:
-            y, x: representan la posición inicial del jugador
-            diceNumber: el número que obtuvo el jugador al tirar el dado
+            y, x: represent the initial position of the player
+            diceNumber: Dice number
         """
         availablePositions = []
         availableRooms = []
@@ -354,32 +359,24 @@ class BoardManager:
             room = self.detectRoom(y, x)
             availableRooms.append(room)
 
-        if (x == 6 or x == 13) and (y == 6 or y == 13):
-            self.moveUp(y, x, diceNumber, availablePositions, availableRooms)
-            self.moveDown(y, x, diceNumber, availablePositions, availableRooms)
-            self.moveLeft(y, x, diceNumber, availablePositions, availableRooms)
-            self.moveRight(y, x, diceNumber, availablePositions, availableRooms)
-
-        elif x == 6 or x == 13:
+        if x == 6 or x == 13:
             self.moveUp(y, x, diceNumber, availablePositions, availableRooms)
             self.moveDown(y, x, diceNumber, availablePositions, availableRooms)
 
-        elif y == 6 or y == 13:
+        if y == 6 or y == 13:
             self.moveLeft(y, x, diceNumber, availablePositions, availableRooms)
             self.moveRight(y, x, diceNumber, availablePositions, availableRooms)
 
         return availablePositions, availableRooms
 
     def calculatePositions(self, player: Player, diceNumber):
-        """Calcula las posiciones disponibles a partir de la posición del jugador.
+        """Checks if a player is in a room and calculates all the available positions he can move to
 
-        En caso de que el jugador se encuentre en un recinto, entonces calcula todas las casillas
-        a las que se puede mover a partir de cada una de las salidas del recinto. En caso contrario,
-        simplemente calcula las casillas disponibles a partir de la ubicación del jugador en el tablero.
-
+        If the player is in a room, then calculates all the availables cells from each exit of the room.
+        Otherwise, just calculate the availables cells from the position of the player.
         Args:
-            player: jugador que intenta realizar el movimiento
-            diceNumber: el número que el jugador obtuvo al tirar el dado
+            player: player who wants to move
+            diceNumber: dice number
         """
         availablePositions = []
         availableRooms = []
@@ -394,10 +391,8 @@ class BoardManager:
 
             for e in exits:
                 y, x = e[0], e[1]
-                if diceNumber == 1:
-                    availablePositions.append((y, x))
-                else:
-                    availablePositions.append((y, x))
+                availablePositions.append((y, x))
+                if diceNumber != 1:
                     l1, l2 = self._calculateAvailablePositions(y, x, diceNumber - 1)
                     availablePositions.extend(l1)
                     availableRooms.extend(l2)
@@ -415,33 +410,27 @@ class BoardManager:
         return availablePositions, availableRooms
 
     def checkPosition(self, player: Player, diceNumber, position: Tuple):
-        """Chequea si la posición a la que un jugador se intenta mover está dentro de sus casillas disponibles
+        """Check if the position to which the player wants to move to is available for him.
 
         Args:
-            player: jugador que intenta moverse
-            diceNumber: número que obtuvo en el dado
-            position: posición a la que el jugador quiere moverse
+            player: player who wants to move
+            diceNumber: dice number
+            position: position to which the player wants to move to
         """
 
         availablePositions, _ = self.calculatePositions(player, diceNumber)
 
-        if tuple(position) in availablePositions:
-            return True
-
-        return False
+        return tuple(position) in availablePositions
 
     def checkRoom(self, player: Player, diceNumber, room: str):
-        """Chequea si el recinto al que un jugador quiere entrar está dentro de sus recintos disponibles
+        """Check if the room to which the player wants to enter to is available for him.
 
         Args:
-            player: jugador que intenta entrar al recinto
-            diceNumber: número que obtuvo en el dado
-            room: recinto al que el jugador quiere entrar
+            player: player who wants to move
+            diceNumber: dice number
+            room: room to which the player wants to enter to
         """
 
         _, availableRooms = self.calculatePositions(player, diceNumber)
 
-        if room in availableRooms:
-            return True
-
-        return False
+        return room in availableRooms

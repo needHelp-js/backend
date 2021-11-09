@@ -147,7 +147,7 @@ def dataCards():
         c3 = Card(id=3, type="monstruo", name="Drácula", game=g1)
         c4 = Card(id=4, type="monstruo", name="Hombre Lobo", game=g1)
         c5 = Card(id=5, type="recinto", name="Cochera", game=g1)
-        c6 = Card(id=6, type="recinto", name="Panteón", game=g1)
+        c6 = Card(id=6, type="recinto", name="Panteon", game=g1)
 
         flush()
 

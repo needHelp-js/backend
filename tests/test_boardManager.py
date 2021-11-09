@@ -66,14 +66,14 @@ def test_getPositionTuplefromId_fail():
 
 
 def test_getRoomId_success():
-    assert 1 == board.getRoomId("COCHERA")
-    assert 2 == board.getRoomId("ALCOBA")
-    assert 3 == board.getRoomId("BIBLIOTECA")
-    assert 4 == board.getRoomId("VESTIBULO")
-    assert 5 == board.getRoomId("PANTEON")
-    assert 6 == board.getRoomId("BODEGA")
-    assert 7 == board.getRoomId("SALON")
-    assert 8 == board.getRoomId("LABORATORIO")
+    assert 1 == board.getRoomId("Cochera")
+    assert 2 == board.getRoomId("Alcoba")
+    assert 3 == board.getRoomId("Biblioteca")
+    assert 4 == board.getRoomId("Vestibulo")
+    assert 5 == board.getRoomId("Panteon")
+    assert 6 == board.getRoomId("Bodega")
+    assert 7 == board.getRoomId("Salon")
+    assert 8 == board.getRoomId("Laboratorio")
 
 
 def test_getRoomId_fail():
@@ -81,14 +81,14 @@ def test_getRoomId_fail():
 
 
 def test_getRoomName_succes():
-    assert "COCHERA" == board.getRoomName(1)
-    assert "ALCOBA" == board.getRoomName(2)
-    assert "BIBLIOTECA" == board.getRoomName(3)
-    assert "VESTIBULO" == board.getRoomName(4)
-    assert "PANTEON" == board.getRoomName(5)
-    assert "BODEGA" == board.getRoomName(6)
-    assert "SALON" == board.getRoomName(7)
-    assert "LABORATORIO" == board.getRoomName(8)
+    assert "Cochera" == board.getRoomName(1)
+    assert "Alcoba" == board.getRoomName(2)
+    assert "Biblioteca" == board.getRoomName(3)
+    assert "Vestibulo" == board.getRoomName(4)
+    assert "Panteon" == board.getRoomName(5)
+    assert "Bodega" == board.getRoomName(6)
+    assert "Salon" == board.getRoomName(7)
+    assert "Laboratorio" == board.getRoomName(8)
 
 
 def test_getRoomName_fail():
@@ -97,18 +97,18 @@ def test_getRoomName_fail():
 
 
 def test_detectRoom_success():
-    assert "COCHERA" == board.detectRoom(2, 6)
-    assert "ALCOBA" == board.detectRoom(6, 10)
-    assert "BIBLIOTECA" == board.detectRoom(4, 6)
-    assert "VESTIBULO" == board.detectRoom(6, 4)
-    assert "VESTIBULO" == board.detectRoom(10, 6)
-    assert "VESTIBULO" == board.detectRoom(13, 3)
-    assert "PANTEON" == board.detectRoom(6, 15)
-    assert "PANTEON" == board.detectRoom(10, 13)
-    assert "PANTEON" == board.detectRoom(13, 16)
-    assert "BODEGA" == board.detectRoom(15, 6)
-    assert "SALON" == board.detectRoom(13, 10)
-    assert "LABORATORIO" == board.detectRoom(16, 13)
+    assert "Cochera" == board.detectRoom(2, 6)
+    assert "Alcoba" == board.detectRoom(6, 10)
+    assert "Biblioteca" == board.detectRoom(4, 6)
+    assert "Vestibulo" == board.detectRoom(6, 4)
+    assert "Vestibulo" == board.detectRoom(10, 6)
+    assert "Vestibulo" == board.detectRoom(13, 3)
+    assert "Panteon" == board.detectRoom(6, 15)
+    assert "Panteon" == board.detectRoom(10, 13)
+    assert "Panteon" == board.detectRoom(13, 16)
+    assert "Bodega" == board.detectRoom(15, 6)
+    assert "Salon" == board.detectRoom(13, 10)
+    assert "Laboratorio" == board.detectRoom(16, 13)
 
 
 def test_moveLeft():
@@ -118,7 +118,7 @@ def test_moveLeft():
     availableRooms = []
     board.moveLeft(6, 5, 3, availablePositions, availableRooms)
     assert [(6, 4), (6, 3), (6, 2)] == availablePositions
-    assert ["VESTIBULO"] == availableRooms
+    assert ["Vestibulo"] == availableRooms
 
     availablePositions = []
     availableRooms = []
@@ -140,7 +140,7 @@ def test_moveRight():
     availableRooms = []
     board.moveRight(6, 14, 3, availablePositions, availableRooms)
     assert [(6, 15), (6, 16), (6, 17)] == availablePositions
-    assert ["PANTEON"] == availableRooms
+    assert ["Panteon"] == availableRooms
 
     availablePositions = []
     availableRooms = []
@@ -162,7 +162,7 @@ def test_moveUp():
     availableRooms = []
     board.moveUp(17, 6, 3, availablePositions, availableRooms)
     assert [(16, 6), (15, 6), (14, 6)] == availablePositions
-    assert ["BODEGA"] == availableRooms
+    assert ["Bodega"] == availableRooms
 
     availablePositions = []
     availableRooms = []
@@ -184,7 +184,7 @@ def test_moveDown():
     availableRooms = []
     board.moveDown(0, 6, 3, availablePositions, availableRooms)
     assert [(1, 6), (2, 6), (3, 6)] == availablePositions
-    assert ["COCHERA"] == availableRooms
+    assert ["Cochera"] == availableRooms
 
     availablePositions = []
     availableRooms = []
@@ -214,7 +214,7 @@ def test_calculateAvailablePositions():
     availableRooms = []
     availablePositions, availableRooms = board._calculateAvailablePositions(2, 6, 2)
     assert [(2, 6), (1, 6), (0, 6), (3, 6), (4, 6)] == availablePositions
-    assert ["COCHERA"] == availableRooms
+    assert ["Cochera"] == availableRooms
 
 
 def test_calculatePositions(app, boardData):
@@ -223,7 +223,7 @@ def test_calculatePositions(app, boardData):
         p1 = Player.get(id=1)
         availablePositions, availableRooms = board.calculatePositions(p1, 2)
         assert [(2, 6), (1, 6), (3, 6)] == availablePositions
-        assert ["COCHERA"] == availableRooms
+        assert ["Cochera"] == availableRooms
 
         p2 = Player.get(id=2)
         availablePositions, availableRooms = board.calculatePositions(p2, 2)
@@ -249,11 +249,11 @@ def test_checkRoom_success(app, boardData):
     with db_session:
 
         p2 = Player.get(id=2)
-        assert board.checkRoom(p2, 6, "COCHERA")
+        assert board.checkRoom(p2, 6, "Cochera")
 
 
 def test_checkRoom_fail(app, boardData):
     with db_session:
 
         p2 = Player.get(id=2)
-        assert not board.checkRoom(p2, 6, "BIBLIOTECA")
+        assert not board.checkRoom(p2, 6, "Biblioteca")
