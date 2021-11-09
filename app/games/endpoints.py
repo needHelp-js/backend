@@ -4,22 +4,13 @@ from typing import List, Tuple
 from app.games.boardManager import BoardManager
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
-from app.games.events import (
-    BEGIN_GAME_EVENT,
-    DICE_ROLL_EVENT,
-    ENTER_ROOM_EVENT,
-    MOVE_PLAYER_EVENT,
-    PLAYER_JOINED_EVENT,
-    SUSPICION_MADE_EVENT,
-)
-from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
-from app.games.schemas import (
-    AvailableGameSchema,
-    CreateGameSchema,
-    MovePlayerSchema,
-    SuspectSchema,
-    joinGameSchema,
-)
+from app.games.events import (BEGIN_GAME_EVENT, DICE_ROLL_EVENT,
+                              ENTER_ROOM_EVENT, MOVE_PLAYER_EVENT,
+                              PLAYER_JOINED_EVENT, SUSPICION_MADE_EVENT)
+from app.games.exceptions import (GameConnectionDoesNotExist,
+                                  PlayerAlreadyConnected)
+from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
+                               MovePlayerSchema, SuspectSchema, joinGameSchema)
 from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import commit, db_session
@@ -169,6 +160,11 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
 async def availablePositions(
     gameId: int, playerId: int, diceNumber: int, response: Response
 ):
+
+    if diceNumber < 1 or diceNumber > 6:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"Error": "Número del dado incorrecto"}
+
     with db_session:
         game = Game.get(id=gameId)
         player = Player.get(id=playerId)
@@ -190,6 +186,10 @@ async def movePlayer(
     data: MovePlayerSchema,
     response: Response,
 ):
+    if data.diceNumber < 1 or data.diceNumber > 6:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"Error": "Número del dado incorrecto"}
+
     with db_session:
 
         game = Game.get(id=gameId)

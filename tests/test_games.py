@@ -137,12 +137,34 @@ def test_getDice_success(client, dataTirarDado):
         assert ans == 1 or ans == 2 or ans == 3 or ans == 4 or ans == 5 or ans == 6
 
 
+def test_availablePositions_wrongDiceNumber(client, dataBoard):
+    response = client.get("/games/1/availablePositions/1", params={"diceNumber": -1})
+    assert response.status_code == 400
+    assert response.json() == {"Error": "Número del dado incorrecto"}
+    response = client.get("/games/1/availablePositions/1", params={"diceNumber": 7})
+    assert response.status_code == 400
+    assert response.json() == {"Error": "Número del dado incorrecto"}
+
+
 def test_availablePositions_success(client, dataBoard):
     response = client.get("/games/1/availablePositions/1", params={"diceNumber": 3})
     assert response.json() == {
         "availablePositions": [[0, 6], [1, 6], [2, 6], [3, 6]],
         "availableRooms": ["COCHERA"],
     }
+
+
+def test_movePlayer_wrongDiceNumber(client, dataBoard):
+    response = client.patch(
+        "/games/1/move/1", json={"diceNumber": -1, "room": "BIBLIOTECA"}
+    )
+    assert response.status_code == 400
+    assert response.json() == {"Error": "Número del dado incorrecto"}
+    response = client.patch(
+        "/games/1/move/1", json={"diceNumber": 7, "room": "BIBLIOTECA"}
+    )
+    assert response.status_code == 400
+    assert response.json() == {"Error": "Número del dado incorrecto"}
 
 
 def test_movePlayer_correctRoom(client, dataBoard):
@@ -278,7 +300,13 @@ def test_getGameDetails_startedGame(client, dataListGames):
         "started": True,
         "currentTurn": 1,
         "players": [
-            {"id": 0, "nickname": "p0", "turnOrder": 1, "position": [0, 6], "room": None}
+            {
+                "id": 0,
+                "nickname": "p0",
+                "turnOrder": 1,
+                "position": [0, 6],
+                "room": None,
+            }
         ],
         "host": {
             "id": 0,
