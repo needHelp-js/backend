@@ -278,13 +278,13 @@ def test_getGameDetails_startedGame(client, dataListGames):
         "started": True,
         "currentTurn": 1,
         "players": [
-            {"id": 0, "nickname": "p0", "turnOrder": 1, "position": 6, "room": None}
+            {"id": 0, "nickname": "p0", "turnOrder": 1, "position": [0, 6], "room": None}
         ],
         "host": {
             "id": 0,
             "nickname": "p0",
             "turnOrder": 1,
-            "position": 6,
+            "position": [0, 6],
             "room": None,
         },
     }
