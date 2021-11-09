@@ -1,8 +1,8 @@
-from pony.orm.core import flush
-from app.models import checkCardName, checkCardType, Card, Game, Player
-from app.enums import CardType, MonstersNames, RoomsNames, VictimsNames
-from pony.orm import db_session
 import pytest
+from app.enums import CardType, MonstersNames, RoomsNames, VictimsNames
+from app.models import Card, Game, Player, checkCardName, checkCardType
+from pony.orm import db_session
+from pony.orm.core import flush
 
 
 def test_checkCardType():
@@ -83,6 +83,7 @@ def test_createGameCards(app):
                 or card.name in monsters_names
                 or card.name in rooms_names
             )
+
 
 def test_assignCardsToPlayers(app, dataTirarDado):
 
