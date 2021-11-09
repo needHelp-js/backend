@@ -156,97 +156,88 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
         return {"playerId": player.id}
 
 
-@router.get("/{gameID}/availablePositions/{playerID}")
+@router.get("/{gameId}/availablePositions/{playerId}")
 @gameRequired
 @playerInGame
+@isPlayersTurn
 async def availablePositions(
-    gameID: int, playerID: int, diceNumber: int, response: Response
+    gameId: int, playerId: int, diceNumber: int, response: Response
 ):
     with db_session:
-        game = Game.get(id=gameID)
-        player = Player.get(id=playerID)
+        game = Game.get(id=gameId)
+        player = Player.get(id=playerId)
 
-        if game.currentTurn != player.turnOrder:
-            response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": "No es el turno del jugador"}
-
-        else:
-            availablePositions, availableRooms = board.checkIfPlayerInRoom(
-                player, diceNumber
-            )
-            return {
-                "availablePositions": availablePositions,
-                "availableRooms": availableRooms,
-            }
+        availablePositions, availableRooms = board.checkIfPlayerInRoom(
+            player, diceNumber
+        )
+        return {
+            "availablePositions": availablePositions,
+            "availableRooms": availableRooms,
+        }
 
 
-@router.patch("/{gameID}/move/{playerID}")
+@router.patch("/{gameId}/move/{playerId}")
 @gameRequired
 @playerInGame
+@isPlayersTurn
 async def movePlayer(
-    gameID: int,
-    playerID: int,
+    gameId: int,
+    playerId: int,
     data: MovePlayerSchema,
     response: Response,
 ):
     with db_session:
 
-        game = Game.get(id=gameID)
-        player = Player.get(id=playerID)
+        game = Game.get(id=gameId)
+        player = Player.get(id=playerId)
 
-        if game.currentTurn != player.turnOrder:
-            response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": "No es el turno del jugador"}
+        if data.position == (-1, -1) and data.room == "":
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"Error": "Faltan parámetros"}
 
-        elif game.currentTurn == player.turnOrder:
+        elif data.position != (-1, -1) and data.room != "":
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"Error": "Parámetros incorrectos"}
 
-            if data.position == (-1, -1) and data.room == "":
-                response.status_code = status.HTTP_400_BAD_REQUEST
-                return {"Error": "Faltan parámetros"}
+        elif data.room != "":
 
-            elif data.position != (-1, -1) and data.room != "":
-                response.status_code = status.HTTP_400_BAD_REQUEST
-                return {"Error": "Parámetros incorrectos"}
-
-            elif data.room != "":
-
-                if board.checkRoom(player, data.diceNumber, data.room):
-                    player.room = board.getRoomId(data.room)
-                    await manager.broadcastToGame(
-                        game.id,
-                        {
-                            "type": ENTER_ROOM_EVENT,
-                            "payload": {
-                                "playerId": player.id,
-                                "playerRoom": board.getRoomName(player.room),
-                            },
+            if board.checkRoom(player, data.diceNumber, data.room):
+                player.room = board.getRoomId(data.room)
+                await manager.broadcastToGame(
+                    game.id,
+                    {
+                        "type": ENTER_ROOM_EVENT,
+                        "payload": {
+                            "playerId": player.id,
+                            "playerRoom": board.getRoomName(player.room),
                         },
-                    )
-
-                else:
-                    response.status_code = status.HTTP_403_FORBIDDEN
-                    return {"Error": "Recinto no disponible para este jugador."}
+                    },
+                )
 
             else:
+                response.status_code = status.HTTP_403_FORBIDDEN
+                return {"Error": "Recinto no disponible para este jugador."}
 
-                if board.checkPosition(player, data.diceNumber, data.position):
+        else:
 
-                    position = board.getPositionIdFromTuple(data.position)
-                    player.position = position
-                    player.room = None
-                    await manager.broadcastToGame(
-                        game.id,
-                        {
-                            "type": MOVE_PLAYER_EVENT,
-                            "payload": {
-                                "playerId": player.id,
-                                "playerPosition": tuple(data.position),
-                            },
+            if board.checkPosition(player, data.diceNumber, data.position):
+
+                position = board.getPositionIdFromTuple(data.position)
+                player.position = position
+                player.room = None
+                await manager.broadcastToGame(
+                    game.id,
+                    {
+                        "type": MOVE_PLAYER_EVENT,
+                        "payload": {
+                            "playerId": player.id,
+                            "playerPosition": tuple(data.position),
                         },
-                    )
-                else:
-                    response.status_code = status.HTTP_403_FORBIDDEN
-                    return {"Error": "Posición no disponible para este jugador."}
+                    },
+                )
+            else:
+                response.status_code = status.HTTP_403_FORBIDDEN
+                return {"Error": "Posición no disponible para este jugador."}
 
 
 @router.get("/{gameId}")

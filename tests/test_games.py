@@ -1,4 +1,4 @@
-from app.games.endpoints import manager
+from app.games.endpoints import availablePositions, manager
 from app.games.events import BEGIN_GAME_EVENT, PLAYER_JOINED_EVENT
 from app.models import Game, Player
 from fastapi import status
@@ -137,6 +137,52 @@ def test_getDice_success(client, dataTirarDado):
         assert ans == 1 or ans == 2 or ans == 3 or ans == 4 or ans == 5 or ans == 6
 
 
+def test_availablePositions_success(client, dataBoard):
+    response = client.get("/games/1/availablePositions/1", params={"diceNumber": 3})
+    assert response.json() == {
+        "availablePositions": [[0, 6], [1, 6], [2, 6], [3, 6]],
+        "availableRooms": ["COCHERA"],
+    }
+
+def test_movePlayer_correctRoom(client, dataBoard):
+    manager.createGameConnection(1)
+    with client.websocket_connect("/games/1/ws/1") as websocket:
+        response = client.patch(
+            "/games/1/move/1", json={"diceNumber": 3, "room": "COCHERA"}
+        )
+        ans = websocket.receive_json()
+        type = ans["type"]
+        payload = ans["payload"]
+        assert type == "ENTER_ROOM_EVENT"
+        assert payload == {"playerId": 1, "playerRoom": "COCHERA"}
+
+def test_movePlayer_wrongRoom(client, dataBoard):
+    response = client.patch(
+        "/games/1/move/1", json={"diceNumber": 3, "room": "BIBLIOTECA"}
+    )
+    assert response.json() == {"Error": "Recinto no disponible para este jugador."}
+
+def test_movePlayer_correctPosition(client, dataBoard):
+    manager.createGameConnection(1)
+
+    with client.websocket_connect("/games/1/ws/1") as websocket:
+        response = client.patch(
+            "/games/1/move/1", json={"diceNumber": 3, "position": [1, 6]}
+        )
+        ans = websocket.receive_json()
+        type = ans["type"]
+        payload = ans["payload"]
+        assert type == "MOVE_PLAYER_EVENT"
+        assert payload == {"playerId": 1, "playerPosition": [1, 6]}
+
+
+def test_movePlayer_wrongPosition(client, dataBoard):
+    response = client.patch(
+        "/games/1/move/1", json={"diceNumber": 3, "position": [5, 6]}
+    )
+    assert response.json() == {"Error": "Posición no disponible para este jugador."}
+
+
 def test_joinGame_success(client, dataGameNoPlayers):
 
     manager.createGameConnection(1)
@@ -196,8 +242,22 @@ def test_getGameDetails_success(client, dataListGames):
         "name": "g1",
         "started": False,
         "currentTurn": 0,
-        "players": [{"id": 0, "nickname": "p0", "turnOrder": None, "position": None, "room": None}],
-        "host": {"id": 0, "nickname": "p0", "turnOrder": None, "position": None, "room": None},
+        "players": [
+            {
+                "id": 0,
+                "nickname": "p0",
+                "turnOrder": None,
+                "position": None,
+                "room": None,
+            }
+        ],
+        "host": {
+            "id": 0,
+            "nickname": "p0",
+            "turnOrder": None,
+            "position": None,
+            "room": None,
+        },
     }
 
 
@@ -214,8 +274,16 @@ def test_getGameDetails_startedGame(client, dataListGames):
         "name": "g1",
         "started": True,
         "currentTurn": 1,
-        "players": [{"id": 0, "nickname": "p0", "turnOrder": 1, "position": 6, "room": None}],
-        "host": {"id": 0, "nickname": "p0", "turnOrder": 1, "position": 6, "room": None},
+        "players": [
+            {"id": 0, "nickname": "p0", "turnOrder": 1, "position": 6, "room": None}
+        ],
+        "host": {
+            "id": 0,
+            "nickname": "p0",
+            "turnOrder": 1,
+            "position": 6,
+            "room": None,
+        },
     }
 
 
@@ -232,7 +300,13 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
             {"id": 1, "nickname": "p1", "turnOrder": 1, "position": None, "room": None},
             {"id": 2, "nickname": "p2", "turnOrder": 2, "position": None, "room": None},
         ],
-        "host": {"id": 1, "nickname": "p1", "turnOrder": 1, "position": None, "room": None},
+        "host": {
+            "id": 1,
+            "nickname": "p1",
+            "turnOrder": 1,
+            "position": None,
+            "room": None,
+        },
     }
 
 
