@@ -23,7 +23,8 @@ class GameMixin(object):
 
     def startGame(self):
         self.currentTurn = 1
-        self.createGameCards()
+        cards = self.createGameCards()
+        self.assignCardsToPlayers(cards)
         self.setPlayersTurnOrder()
         self.started = True
 
@@ -54,3 +55,16 @@ class GameMixin(object):
         cards["rooms"][randrange(len(cards["rooms"]))].isInEnvelope = True
 
         return cards
+
+    def assignCardsToPlayers(self, cards):
+
+        card_set = set(cards["victims"])
+        card_set.update(cards["monsters"])
+        card_set.update(cards["rooms"])
+
+        players = list(self.players)
+
+        i = 0
+        while len(card_set) > 0:
+            players[i % len(players)].cards.add(card_set.pop())
+            i += 1
