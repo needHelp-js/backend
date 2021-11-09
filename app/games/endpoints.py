@@ -233,6 +233,25 @@ async def suspect(
         
         if responseInfo is None:
             player.isSuspecting = False
+            await manager.sendToPlayer(
+                gameId,
+                playerId,
+                {
+                    "type": SUSPICION_FAILED_EVENT,
+                    "payload": {
+                        "Error": "No hay jugadores que posean alguna de las cartas que sospechaste"
+                    },
+                },
+            )
+
+            game.incrementTurn()
+            currentPlayer = game.players.filter(
+                lambda player: player.turnOrder == game.currentTurn
+            ).first()
+            await manager.broadcastToGame(
+                gameId,
+                {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id}},
+            )
         else:
             await manager.sendToPlayer(
                 gameId,

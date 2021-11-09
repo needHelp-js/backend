@@ -397,6 +397,20 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
             "roomId": None,
         }
 
+        ans = websocket1.receive_json()
+        assert ans["type"] == SUSPICION_FAILED_EVENT
+        assert ans["payload"] == {
+            "Error": "No hay jugadores que posean alguna de las cartas que sospechaste"
+        }
+
+        ans = websocket1.receive_json()
+        assert ans["type"] == TURN_ENDED_EVENT
+        assert ans["payload"] == {"playerId": 2}
+
+        ans = websocket2.receive_json()
+        assert ans["type"] == TURN_ENDED_EVENT
+        assert ans["payload"] == {"playerId": 2}
+
         with db_session:
             assert not Player[1].isSuspecting
 
