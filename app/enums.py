@@ -25,7 +25,7 @@ class MonstersNames(Enum):
     DR_JEKYLL_MR_HYDE = "Dr. Jekyll Mr Hyde"
 
 
-class RoomName(Enum):
+class RoomsNames(Enum):
     COCHERA = "Cochera"
     ALCOBA = "Alcoba"
     BIBLIOTECA = "Biblioteca"

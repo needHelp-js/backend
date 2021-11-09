@@ -1,6 +1,6 @@
 from pony.orm import *
 
-from app.enums import CardType, MonstersNames, RoomName, VictimsNames
+from app.enums import CardType, MonstersNames, RoomsNames, VictimsNames
 from app.mixins import GameMixin
 
 db = Database()
@@ -41,7 +41,7 @@ def checkCardName(val):
     for elem in MonstersNames:
         if elem.value == val:
             return True
-    for elem in RoomName:
+    for elem in RoomsNames:
         if elem.value == val:
             return True
     return False

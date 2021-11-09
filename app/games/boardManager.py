@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from app.enums import RoomName
+from app.enums import RoomsNames
 from app.models import Player
 
 
@@ -50,25 +50,25 @@ class BoardManager:
         self._board[13][10] = "#"
         self._board[13][16] = "#"
 
-        room1 = Room(id=1, name=RoomName.COCHERA.value, entries=[(2, 6)])
+        room1 = Room(id=1, name=RoomsNames.COCHERA.value, entries=[(2, 6)])
         self._rooms.append(room1)
-        room2 = Room(id=2, name=RoomName.ALCOBA.value, entries=[(6, 10)])
+        room2 = Room(id=2, name=RoomsNames.ALCOBA.value, entries=[(6, 10)])
         self._rooms.append(room2)
-        room3 = Room(id=3, name=RoomName.BIBLIOTECA.value, entries=[(4, 6)])
+        room3 = Room(id=3, name=RoomsNames.BIBLIOTECA.value, entries=[(4, 6)])
         self._rooms.append(room3)
         room4 = Room(
-            id=4, name=RoomName.VESTIBULO.value, entries=[(6, 4), (10, 6), (13, 3)]
+            id=4, name=RoomsNames.VESTIBULO.value, entries=[(6, 4), (10, 6), (13, 3)]
         )
         self._rooms.append(room4)
         room5 = Room(
-            id=5, name=RoomName.PANTEON.value, entries=[(6, 15), (10, 13), (13, 16)]
+            id=5, name=RoomsNames.PANTEON.value, entries=[(6, 15), (10, 13), (13, 16)]
         )
         self._rooms.append(room5)
-        room6 = Room(id=6, name=RoomName.BODEGA.value, entries=[(15, 6)])
+        room6 = Room(id=6, name=RoomsNames.BODEGA.value, entries=[(15, 6)])
         self._rooms.append(room6)
-        room7 = Room(id=7, name=RoomName.SALON.value, entries=[(13, 10)])
+        room7 = Room(id=7, name=RoomsNames.SALON.value, entries=[(13, 10)])
         self._rooms.append(room7)
-        room8 = Room(id=8, name=RoomName.LABORATORIO.value, entries=[(16, 13)])
+        room8 = Room(id=8, name=RoomsNames.LABORATORIO.value, entries=[(16, 13)])
         self._rooms.append(room8)
 
         i = 0

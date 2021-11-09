@@ -1,4 +1,4 @@
-from app.enums import CardType, MonstersNames, RoomName, VictimsNames
+from app.enums import CardType, MonstersNames, RoomsNames, VictimsNames
 from app import models
 from random import randrange
 
@@ -52,7 +52,7 @@ class GameMixin(object):
                 )
             )
 
-        for roomName in RoomName:
+        for roomName in RoomsNames:
             cards["rooms"].append(
                 models.Card(type=CardType.ROOM.value, name=roomName.value, game=self)
             )
