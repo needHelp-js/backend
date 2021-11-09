@@ -165,8 +165,6 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
 
 
 @router.get("/{gameId}/availablePositions/{playerId}")
-@gameRequired
-@playerInGame
 @isPlayersTurn
 async def availablePositions(
     gameId: int, playerId: int, diceNumber: int, response: Response
@@ -185,8 +183,6 @@ async def availablePositions(
 
 
 @router.patch("/{gameId}/move/{playerId}")
-@gameRequired
-@playerInGame
 @isPlayersTurn
 async def movePlayer(
     gameId: int,
