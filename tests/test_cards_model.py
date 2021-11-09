@@ -1,6 +1,6 @@
 from pony.orm.core import flush
 from app.models import checkCardName, checkCardType, Card, Game, Player
-from app.enums import CardType, MonstersNames, RoomName, VictimsNames
+from app.enums import CardType, MonstersNames, RoomsNames, VictimsNames
 from pony.orm import db_session
 
 
@@ -15,7 +15,7 @@ def test_checkCardName():
     assert checkCardName("something different") == False
     assert checkCardName(VictimsNames.CONDE.value)
     assert checkCardName(MonstersNames.DRACULA.value)
-    assert checkCardName(RoomName.ALCOBA.value)
+    assert checkCardName(RoomsNames.ALCOBA.value)
 
 
 def test_createGameCards(app):
@@ -30,7 +30,7 @@ def test_createGameCards(app):
 
         victims_names = set(name.value for name in VictimsNames)
         monsters_names = set(name.value for name in MonstersNames)
-        rooms_names = set(name.value for name in RoomName)
+        rooms_names = set(name.value for name in RoomsNames)
 
         for card in cards["victims"]:
             assert card.type == CardType.VICTIM.value

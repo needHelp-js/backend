@@ -1,7 +1,9 @@
-from typing import List
-from app.enums import CardType, MonstersNames, RoomName, VictimsNames
-from app import models
 from random import randrange
+from typing import List
+
+from app import models
+from app.enums import (CardType, MonstersNames, RoomName, RoomsNames,
+                       VictimsNames)
 
 
 class GameMixin(object):
@@ -22,7 +24,15 @@ class GameMixin(object):
             player.turnOrder = turnToAssign
             turnToAssign += 1
 
+    def setPlayersInitialPositions(self):
+        initialPositions = [6, 13, 120, 139, 260, 279, 386, 393]
+        i = 0
+        for player in self.players:
+            player.position = initialPositions[i]
+            i += 1
+
     def startGame(self):
+        self.setPlayersInitialPositions()
         self.currentTurn = 1
         self.createGameCards()
         self.setPlayersTurnOrder()
@@ -45,7 +55,7 @@ class GameMixin(object):
                 )
             )
 
-        for roomName in RoomName:
+        for roomName in RoomsNames:
             cards["rooms"].append(
                 models.Card(type=CardType.ROOM.value, name=roomName.value, game=self)
             )
