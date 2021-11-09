@@ -40,7 +40,7 @@ def test_createGameCards(app):
 
             card_set.add(card.name)
 
-        assert len(card_set) == len(victims_names)
+        assert len(card_set) == len(victims_names) - 1
 
         card_set.clear()
 
@@ -51,7 +51,7 @@ def test_createGameCards(app):
 
             card_set.add(card.name)
 
-        assert len(card_set) == len(monsters_names)
+        assert len(card_set) == len(monsters_names) - 1
 
         card_set.clear()
 
@@ -62,7 +62,7 @@ def test_createGameCards(app):
 
             card_set.add(card.name)
 
-        assert len(card_set) == len(rooms_names)
+        assert len(card_set) == len(rooms_names) - 1
 
         envelope = g1.cards.filter(isInEnvelope=True)[:]
 
