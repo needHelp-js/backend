@@ -59,9 +59,17 @@ class GameMixin(object):
                 models.Card(type=CardType.ROOM.value, name=roomName.value, game=self)
             )
 
-        cards["victims"][randrange(len(cards["victims"]))].isInEnvelope = True
-        cards["monsters"][randrange(len(cards["monsters"]))].isInEnvelope = True
-        cards["rooms"][randrange(len(cards["rooms"]))].isInEnvelope = True
+        i = randrange(len(cards["victims"]))
+        cards["victims"][i].isInEnvelope = True
+        del cards["victims"][i];
+
+        i = randrange(len(cards["monsters"]))
+        cards["monsters"][i].isInEnvelope = True
+        del cards["monsters"][i];
+
+        i = randrange(len(cards["rooms"]))
+        cards["rooms"][i].isInEnvelope = True
+        del cards["rooms"][i];
 
         return cards
 
