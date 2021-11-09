@@ -203,6 +203,7 @@ async def movePlayer(
 
             if board.checkRoom(player, data.diceNumber, data.room):
                 player.room = board.getRoomId(data.room)
+                player.position = None
                 await manager.broadcastToGame(
                     game.id,
                     {
@@ -256,6 +257,15 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
         dict["players"] = [p.to_dict(exclude=excluded_fields) for p in dict["players"]]
 
         dict["host"] = dict["host"].to_dict(exclude=excluded_fields)
+
+        for player in dict["players"]:
+            player["position"] = board.getPositionTupleFromId(player["position"])
+            player["room"] = board.getRoomName(player["room"])
+
+        dict["host"]["position"] = board.getPositionTupleFromId(
+            dict["host"]["position"]
+        )
+        dict["host"]["room"] = board.getRoomName(dict["host"]["room"])
 
         return dict
 

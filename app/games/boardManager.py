@@ -1,4 +1,5 @@
-from typing import Tuple, List
+from typing import List, Tuple
+
 from app.models import Player
 
 
@@ -96,6 +97,8 @@ class BoardManager:
         Args:
             id: id único de la casilla
         """
+        if id is None:
+            return None
 
         if id < 0 or id > 399:
             return None

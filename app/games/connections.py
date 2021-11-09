@@ -1,12 +1,11 @@
+import asyncio
 from typing import Any, Dict
+
 from fastapi import WebSocket
 from starlette.websockets import WebSocketDisconnect, WebSocketState
-from .exceptions import (
-    GameConnectionDoesNotExist,
-    PlayerAlreadyConnected,
-    PlayerNotConnected,
-)
-import asyncio
+
+from .exceptions import (GameConnectionDoesNotExist, PlayerAlreadyConnected,
+                         PlayerNotConnected)
 
 
 class GameConnectionManager:

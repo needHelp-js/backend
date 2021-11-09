@@ -117,16 +117,17 @@ def beginGameData():
         g2.players.add([p3, p4])
         g3.players.add(p5)
 
+
 @pytest.fixture
 def boardData():
     with db_session:
         p1 = Player(id=1, nickname="p1", room=1)
         p2 = Player(id=2, nickname="p2", position=6)
 
+
 @pytest.fixture
 def dataBoard():
     with db_session:
-        #p1 = Player(id=1, nickname="p1", currentTurn=2, position=6)
         p1 = Player(id=1, nickname="p1", turnOrder=1, position=6)
         g1 = Game(id=1, name="g1", currentTurn=1, host=p1)
 

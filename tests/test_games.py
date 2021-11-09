@@ -144,6 +144,7 @@ def test_availablePositions_success(client, dataBoard):
         "availableRooms": ["COCHERA"],
     }
 
+
 def test_movePlayer_correctRoom(client, dataBoard):
     manager.createGameConnection(1)
     with client.websocket_connect("/games/1/ws/1") as websocket:
@@ -156,11 +157,13 @@ def test_movePlayer_correctRoom(client, dataBoard):
         assert type == "ENTER_ROOM_EVENT"
         assert payload == {"playerId": 1, "playerRoom": "COCHERA"}
 
+
 def test_movePlayer_wrongRoom(client, dataBoard):
     response = client.patch(
         "/games/1/move/1", json={"diceNumber": 3, "room": "BIBLIOTECA"}
     )
     assert response.json() == {"Error": "Recinto no disponible para este jugador."}
+
 
 def test_movePlayer_correctPosition(client, dataBoard):
     manager.createGameConnection(1)
