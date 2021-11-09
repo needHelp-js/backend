@@ -295,6 +295,8 @@ async def suspect(
         card1 = Card.get(lambda c: c.game.id == gameId and c.name == card1Name)
         card2 = Card.get(lambda c: c.game.id == gameId and c.name == card2Name)
 
+        playerRoom = board.getRoomName(player.room)
+
         if card1 is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": f"La carta {card1Name} no existe"}
@@ -316,7 +318,7 @@ async def suspect(
                     "playerId": playerId,
                     "card1Name": card1Name,
                     "card2Name": card2Name,
-                    "roomId": player.room,
+                    "roomName": playerRoom,
                 },
             },
         )
@@ -325,8 +327,13 @@ async def suspect(
 
         game = Game[gameId]
 
+        cardNames = [card1Name, card2Name]
+        
+        if playerRoom is not None:
+            cardNames.append(playerRoom)
+
         responseInfo = game.findPlayerIdWithCards(
-            cardNames=[card1Name, card2Name], fromPlayerId=playerId
+            cardNames=cardNames, fromPlayerId=playerId
         )
 
         if responseInfo is None:

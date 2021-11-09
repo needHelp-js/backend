@@ -1,4 +1,4 @@
-from app.enums import MonstersNames, VictimsNames
+from app.enums import MonstersNames, RoomsNames, VictimsNames
 from app.games.endpoints import availablePositions, manager
 from app.games.events import (
     BEGIN_GAME_EVENT,
@@ -392,7 +392,7 @@ def test_suspect_success(client, dataSuspect):
             "playerId": 1,
             "card1Name": VictimsNames.CONDE.value,
             "card2Name": MonstersNames.DRACULA.value,
-            "roomId": None,
+            "roomName": None,
         }
 
         ans = websocket2.receive_json()
@@ -401,7 +401,7 @@ def test_suspect_success(client, dataSuspect):
             "playerId": 1,
             "card1Name": VictimsNames.CONDE.value,
             "card2Name": MonstersNames.DRACULA.value,
-            "roomId": None,
+            "roomName": None,
         }
 
         ans = websocket2.receive_json()
@@ -434,7 +434,7 @@ def test_suspect_success_otherPlayerWithCard(client, dataSuspect):
             "playerId": 1,
             "card1Name": VictimsNames.CONDE.value,
             "card2Name": MonstersNames.HOMBRE_LOBO.value,
-            "roomId": None,
+            "roomName": None,
         }
 
         ans = websocket3.receive_json()
@@ -443,7 +443,7 @@ def test_suspect_success_otherPlayerWithCard(client, dataSuspect):
             "playerId": 1,
             "card1Name": VictimsNames.CONDE.value,
             "card2Name": MonstersNames.HOMBRE_LOBO.value,
-            "roomId": None,
+            "roomName": None,
         }
 
         ans = websocket3.receive_json()
@@ -475,7 +475,7 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
             "playerId": 1,
             "card1Name": VictimsNames.MAYORDOMO.value,
             "card2Name": MonstersNames.HOMBRE_LOBO.value,
-            "roomId": None,
+            "roomName": None,
         }
 
         ans = websocket2.receive_json()
@@ -484,7 +484,7 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
             "playerId": 1,
             "card1Name": VictimsNames.MAYORDOMO.value,
             "card2Name": MonstersNames.HOMBRE_LOBO.value,
-            "roomId": None,
+            "roomName": None,
         }
 
         ans = websocket1.receive_json()
@@ -504,6 +504,49 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
         with db_session:
             assert not Player[1].isSuspecting
 
+def test_suspect_playerInRoom(client, dataSuspect):
+    manager.createGameConnection(1)
+
+    with db_session:
+        p1 = Player[1]
+        p1.room = 1 # COCHERA
+
+    with client.websocket_connect(
+        "/games/1/ws/1"
+    ) as websocket1, client.websocket_connect("/games/1/ws/2") as websocket2:
+
+        response = client.post(
+            "/games/1/suspect/1",
+            json={
+                "card1Name": VictimsNames.MAYORDOMO.value,
+                "card2Name": MonstersNames.HOMBRE_LOBO.value,
+            },
+        )
+        assert response.status_code == 204
+        ans = websocket1.receive_json()
+        assert ans["type"] == SUSPICION_MADE_EVENT
+        assert ans["payload"] == {
+            "playerId": 1,
+            "card1Name": VictimsNames.MAYORDOMO.value,
+            "card2Name": MonstersNames.HOMBRE_LOBO.value,
+            "roomName": RoomsNames.COCHERA.value,
+        }
+
+        ans = websocket2.receive_json()
+        assert ans["type"] == SUSPICION_MADE_EVENT
+        assert ans["payload"] == {
+            "playerId": 1,
+            "card1Name": VictimsNames.MAYORDOMO.value,
+            "card2Name": MonstersNames.HOMBRE_LOBO.value,
+            "roomName": RoomsNames.COCHERA.value,
+        }
+
+        ans = websocket2.receive_json()
+        assert ans["type"] == YOU_ARE_SUSPICIOUS_EVENT
+        assert ans["payload"] == {"playerId": 1, "cards": [RoomsNames.COCHERA.value]}
+
+        with db_session:
+            assert Player[1].isSuspecting
 
 def test_suspect_card1NoExists(client, dataCards):
 
