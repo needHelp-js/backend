@@ -1,5 +1,5 @@
 from pony.orm import db_session
-from app.enums import MonstersNames, RoomName, VictimsNames
+from app.enums import MonstersNames, RoomsNames, VictimsNames
 from app.models import Card, Game, Player
 
 
@@ -86,7 +86,7 @@ def test_findPlayerIdWithCards_success(app, dataSuspect):
             [
                 VictimsNames.CONDESA.value,
                 MonstersNames.DRACULA.value,
-                RoomName.PANTEON.value,
+                RoomsNames.PANTEON.value,
             ],
             fromPlayerId=1,
         )
@@ -107,7 +107,7 @@ def test_findPlayerIdWithCards_successSecondPlayer(app, dataSuspect):
             [
                 VictimsNames.CONDE.value,
                 MonstersNames.MOMIA.value,
-                RoomName.PANTEON.value,
+                RoomsNames.PANTEON.value,
             ],
             fromPlayerId=1,
         )
@@ -133,7 +133,7 @@ def test_findPlayerIdWithCards_imLastPlayer(app, dataSuspect):
 
         response = g1.findPlayerIdWithCards(
             [
-                RoomName.PANTEON.value,
+                RoomsNames.PANTEON.value,
                 VictimsNames.CONDESA.value,
                 VictimsNames.DONCELLA.value,
             ],
@@ -151,7 +151,7 @@ def test_findPlayerIdWithCards_fromFirstPlayer(app, dataSuspect):
 
         response = g1.findPlayerIdWithCards(
             [
-                RoomName.PANTEON.value,
+                RoomsNames.PANTEON.value,
                 VictimsNames.CONDESA.value,
                 VictimsNames.DONCELLA.value,
             ],

@@ -2,7 +2,7 @@ from random import randrange
 from typing import List
 
 from app import models
-from app.enums import (CardType, MonstersNames, RoomName, RoomsNames,
+from app.enums import (CardType, MonstersNames, RoomsNames,
                        VictimsNames)
 
 
