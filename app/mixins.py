@@ -1,6 +1,7 @@
-from app.enums import CardType, MonstersNames, RoomName, VictimsNames
-from app import models
 from random import randrange
+
+from app import models
+from app.enums import CardType, MonstersNames, RoomName, VictimsNames
 
 
 class GameMixin(object):
