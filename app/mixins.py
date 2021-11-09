@@ -1,6 +1,7 @@
-from app.enums import CardType, MonstersNames, RoomsNames, VictimsNames
-from app import models
 from random import randrange
+
+from app import models
+from app.enums import CardType, MonstersNames, RoomsNames, VictimsNames
 
 
 class GameMixin(object):
@@ -31,7 +32,8 @@ class GameMixin(object):
     def startGame(self):
         self.setPlayersInitialPositions()
         self.currentTurn = 1
-        self.createGameCards()
+        cards = self.createGameCards()
+        self.assignCardsToPlayers(cards)
         self.setPlayersTurnOrder()
         self.started = True
 
@@ -57,8 +59,29 @@ class GameMixin(object):
                 models.Card(type=CardType.ROOM.value, name=roomName.value, game=self)
             )
 
-        cards["victims"][randrange(len(cards["victims"]))].isInEnvelope = True
-        cards["monsters"][randrange(len(cards["monsters"]))].isInEnvelope = True
-        cards["rooms"][randrange(len(cards["rooms"]))].isInEnvelope = True
+        i = randrange(len(cards["victims"]))
+        cards["victims"][i].isInEnvelope = True
+        del cards["victims"][i];
+
+        i = randrange(len(cards["monsters"]))
+        cards["monsters"][i].isInEnvelope = True
+        del cards["monsters"][i];
+
+        i = randrange(len(cards["rooms"]))
+        cards["rooms"][i].isInEnvelope = True
+        del cards["rooms"][i];
 
         return cards
+
+    def assignCardsToPlayers(self, cards):
+
+        card_set = set(cards["victims"])
+        card_set.update(cards["monsters"])
+        card_set.update(cards["rooms"])
+
+        players = list(self.players)
+
+        i = 0
+        while len(card_set) > 0:
+            players[i % len(players)].cards.add(card_set.pop())
+            i += 1

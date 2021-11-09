@@ -4,11 +4,12 @@ from typing import List, Tuple
 from app.games.boardManager import BoardManager
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
-from app.games.events import (BEGIN_GAME_EVENT, DICE_ROLL_EVENT,
-                              ENTER_ROOM_EVENT, MOVE_PLAYER_EVENT,
-                              PLAYER_JOINED_EVENT, SUSPICION_MADE_EVENT)
+from app.games.events import (BEGIN_GAME_EVENT, DEAL_CARDS_EVENT,
+                              DICE_ROLL_EVENT, ENTER_ROOM_EVENT,
+                              MOVE_PLAYER_EVENT, PLAYER_JOINED_EVENT,
+                              SUSPICION_MADE_EVENT)
 from app.games.exceptions import (GameConnectionDoesNotExist,
-                                  PlayerAlreadyConnected)
+                                  PlayerAlreadyConnected, PlayerNotConnected)
 from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
                                MovePlayerSchema, SuspectSchema, joinGameSchema)
 from app.models import Card, Game, Player
@@ -81,6 +82,20 @@ async def beginGame(gameID: int, playerID: int, response: Response):
                 await manager.broadcastToGame(
                     gameID, {"type": BEGIN_GAME_EVENT, "payload": None}
                 )
+
+                for player in game.players:
+
+                    cards = [card.name for card in player.cards]
+
+                    try:
+                        await manager.sendToPlayer(
+                            gameID,
+                            player.id,
+                            {"type": DEAL_CARDS_EVENT, "payload": cards},
+                        )
+                    except PlayerNotConnected:
+                        pass
+
             else:
                 response.status_code = status.HTTP_403_FORBIDDEN
                 return {"Error": "La partida ya empezó"}

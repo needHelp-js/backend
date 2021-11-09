@@ -1,5 +1,6 @@
-from app.games.endpoints import availablePositions, manager
-from app.games.events import BEGIN_GAME_EVENT, PLAYER_JOINED_EVENT
+from app.games.endpoints import manager
+from app.games.events import (BEGIN_GAME_EVENT, DEAL_CARDS_EVENT,
+                              PLAYER_JOINED_EVENT)
 from app.models import Game, Player
 from fastapi import status
 from pony.orm import db_session
@@ -106,6 +107,35 @@ def test_beginGame_successCase(client, beginGameData):
         assert response.status_code == 204
         ans = websocket.receive_json()["type"]
         assert ans == BEGIN_GAME_EVENT
+
+
+def test_beginGame_success_PlayerCardsSent(client, beginGameData):
+
+    manager.createGameConnection(1)
+
+    with client.websocket_connect("games/1/ws/1") as p1ws, client.websocket_connect(
+        "games/1/ws/2"
+    ) as p2ws:
+        response = client.patch("/games/1/begin/1")
+
+        assert response.status_code == 204
+
+        assert p1ws.receive_json()["type"] == BEGIN_GAME_EVENT
+
+        assert p2ws.receive_json()["type"] == BEGIN_GAME_EVENT
+
+        ans1 = p1ws.receive_json()
+        assert ans1["type"] == DEAL_CARDS_EVENT
+
+        ans2 = p2ws.receive_json()
+        assert ans2["type"] == DEAL_CARDS_EVENT
+
+        with db_session:
+            p1Cards = [card.name for card in Player[1].cards]
+            p2Cards = [card.name for card in Player[2].cards]
+
+            assert ans1["payload"].sort() == p1Cards.sort()
+            assert ans2["payload"].sort() == p2Cards.sort()
 
 
 def test_getDice_nonExistentGame(client, dataTirarDado):
