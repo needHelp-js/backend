@@ -528,12 +528,13 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
         with db_session:
             assert not Player[1].isSuspecting
 
+
 def test_suspect_playerInRoom(client, dataSuspect):
     manager.createGameConnection(1)
 
     with db_session:
         p1 = Player[1]
-        p1.room = 1 # COCHERA
+        p1.room = 1  # COCHERA
 
     with client.websocket_connect(
         "/games/1/ws/1"
@@ -571,6 +572,7 @@ def test_suspect_playerInRoom(client, dataSuspect):
 
         with db_session:
             assert Player[1].isSuspecting
+
 
 def test_suspect_card1NoExists(client, dataCards):
 

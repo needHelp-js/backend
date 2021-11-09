@@ -343,7 +343,7 @@ async def suspect(
         game = Game[gameId]
 
         cardNames = [card1Name, card2Name]
-        
+
         if playerRoom is not None:
             cardNames.append(playerRoom)
 

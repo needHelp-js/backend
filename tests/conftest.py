@@ -154,6 +154,7 @@ def dataCards():
 
         g1.players.add([p1, p2])
 
+
 @pytest.fixture
 def dataSuspect():
     with db_session:
@@ -165,19 +166,38 @@ def dataSuspect():
 
         flush()
 
-        g1.players.add([p1,p2,p3,p4])
+        g1.players.add([p1, p2, p3, p4])
 
-        c1 = Card(id=1, type=CardType.VICTIM.value, name=VictimsNames.CONDE.value, game=g1)
-        c2 = Card(id=2, type=CardType.VICTIM.value, name=VictimsNames.CONDESA.value, game=g1)
-        c3 = Card(id=3, type=CardType.MONSTER.value, name=MonstersNames.DRACULA.value, game=g1)
-        c4 = Card(id=4, type=CardType.MONSTER.value, name=MonstersNames.HOMBRE_LOBO.value, game=g1)
-        c5 = Card(id=5, type=CardType.ROOM.value, name=RoomsNames.COCHERA.value, game=g1)
-        c6 = Card(id=6, type=CardType.ROOM.value, name=RoomsNames.PANTEON.value, game=g1)
+        c1 = Card(
+            id=1, type=CardType.VICTIM.value, name=VictimsNames.CONDE.value, game=g1
+        )
+        c2 = Card(
+            id=2, type=CardType.VICTIM.value, name=VictimsNames.CONDESA.value, game=g1
+        )
+        c3 = Card(
+            id=3, type=CardType.MONSTER.value, name=MonstersNames.DRACULA.value, game=g1
+        )
+        c4 = Card(
+            id=4,
+            type=CardType.MONSTER.value,
+            name=MonstersNames.HOMBRE_LOBO.value,
+            game=g1,
+        )
+        c5 = Card(
+            id=5, type=CardType.ROOM.value, name=RoomsNames.COCHERA.value, game=g1
+        )
+        c6 = Card(
+            id=6, type=CardType.ROOM.value, name=RoomsNames.PANTEON.value, game=g1
+        )
 
-        c7 = Card(id=7, type=CardType.VICTIM.value, name=VictimsNames.MAYORDOMO.value, game=g1)
-        c8 = Card(id=8, type=CardType.VICTIM.value, name=VictimsNames.DONCELLA.value, game=g1)
+        c7 = Card(
+            id=7, type=CardType.VICTIM.value, name=VictimsNames.MAYORDOMO.value, game=g1
+        )
+        c8 = Card(
+            id=8, type=CardType.VICTIM.value, name=VictimsNames.DONCELLA.value, game=g1
+        )
 
         p1.cards.add(c8)
-        p2.cards.add([c2,c3,c5])
+        p2.cards.add([c2, c3, c5])
         p3.cards.add(c1)
         p4.cards.add(c6)
