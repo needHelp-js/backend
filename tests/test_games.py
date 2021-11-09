@@ -1,8 +1,10 @@
 from pony.orm.core import flush
+from app.enums import MonstersNames, VictimsNames
 from app.games.endpoints import manager
 from app.games.events import (
     BEGIN_GAME_EVENT,
     PLAYER_JOINED_EVENT,
+    SUSPICION_FAILED_EVENT,
     SUSPICION_MADE_EVENT,
     SUSPICION_RESPONSE_EVENT,
     TURN_ENDED_EVENT,
@@ -300,15 +302,18 @@ def test_suspect_success(client, dataSuspect):
 
         response = client.post(
             "/games/1/suspect/1",
-            json={"card1Name": "Conde", "card2Name": "Drácula"},
+            json={
+                "card1Name": VictimsNames.CONDE.value,
+                "card2Name": MonstersNames.DRACULA.value,
+            },
         )
         assert response.status_code == 204
         ans = websocket1.receive_json()
         assert ans["type"] == SUSPICION_MADE_EVENT
         assert ans["payload"] == {
             "playerId": 1,
-            "card1Name": "Conde",
-            "card2Name": "Drácula",
+            "card1Name": VictimsNames.CONDE.value,
+            "card2Name": MonstersNames.DRACULA.value,
             "roomId": None,
         }
 
@@ -316,17 +321,18 @@ def test_suspect_success(client, dataSuspect):
         assert ans["type"] == SUSPICION_MADE_EVENT
         assert ans["payload"] == {
             "playerId": 1,
-            "card1Name": "Conde",
-            "card2Name": "Drácula",
+            "card1Name": VictimsNames.CONDE.value,
+            "card2Name": MonstersNames.DRACULA.value,
             "roomId": None,
         }
 
         ans = websocket2.receive_json()
         assert ans["type"] == YOU_ARE_SUSPICIOUS_EVENT
-        assert ans["payload"] == {"playerId": 1, "cards": ["Drácula"]}
+        assert ans["payload"] == {"playerId": 1, "cards": [MonstersNames.DRACULA.value]}
 
         with db_session:
             assert Player[1].isSuspecting
+
 
 def test_suspect_success_otherPlayerWithCard(client, dataSuspect):
 
@@ -338,15 +344,18 @@ def test_suspect_success_otherPlayerWithCard(client, dataSuspect):
 
         response = client.post(
             "/games/1/suspect/1",
-            json={"card1Name": "Conde", "card2Name": "Hombre Lobo"},
+            json={
+                "card1Name": VictimsNames.CONDE.value,
+                "card2Name": MonstersNames.HOMBRE_LOBO.value,
+            },
         )
         assert response.status_code == 204
         ans = websocket1.receive_json()
         assert ans["type"] == SUSPICION_MADE_EVENT
         assert ans["payload"] == {
             "playerId": 1,
-            "card1Name": "Conde",
-            "card2Name": "Hombre Lobo",
+            "card1Name": VictimsNames.CONDE.value,
+            "card2Name": MonstersNames.HOMBRE_LOBO.value,
             "roomId": None,
         }
 
@@ -354,14 +363,14 @@ def test_suspect_success_otherPlayerWithCard(client, dataSuspect):
         assert ans["type"] == SUSPICION_MADE_EVENT
         assert ans["payload"] == {
             "playerId": 1,
-            "card1Name": "Conde",
-            "card2Name": "Hombre Lobo",
+            "card1Name": VictimsNames.CONDE.value,
+            "card2Name": MonstersNames.HOMBRE_LOBO.value,
             "roomId": None,
         }
 
         ans = websocket3.receive_json()
         assert ans["type"] == YOU_ARE_SUSPICIOUS_EVENT
-        assert ans["payload"] == {"playerId": 1, "cards": ["Conde"]}
+        assert ans["payload"] == {"playerId": 1, "cards": [VictimsNames.CONDE.value]}
 
         with db_session:
             assert Player[1].isSuspecting
@@ -376,15 +385,18 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
 
         response = client.post(
             "/games/1/suspect/1",
-            json={"card1Name": "Mayordomo", "card2Name": "Hombre Lobo"},
+            json={
+                "card1Name": VictimsNames.MAYORDOMO.value,
+                "card2Name": MonstersNames.HOMBRE_LOBO.value,
+            },
         )
         assert response.status_code == 204
         ans = websocket1.receive_json()
         assert ans["type"] == SUSPICION_MADE_EVENT
         assert ans["payload"] == {
             "playerId": 1,
-            "card1Name": "Mayordomo",
-            "card2Name": "Hombre Lobo",
+            "card1Name": VictimsNames.MAYORDOMO.value,
+            "card2Name": MonstersNames.HOMBRE_LOBO.value,
             "roomId": None,
         }
 
@@ -392,8 +404,8 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
         assert ans["type"] == SUSPICION_MADE_EVENT
         assert ans["payload"] == {
             "playerId": 1,
-            "card1Name": "Mayordomo",
-            "card2Name": "Hombre Lobo",
+            "card1Name": VictimsNames.MAYORDOMO.value,
+            "card2Name": MonstersNames.HOMBRE_LOBO.value,
             "roomId": None,
         }
 
@@ -419,7 +431,7 @@ def test_suspect_card1NoExists(client, dataCards):
 
     response = client.post(
         "/games/1/suspect/1",
-        json={"card1Name": "Perro", "card2Name": "Condesa"},
+        json={"card1Name": "Perro", "card2Name": VictimsNames.CONDESA.value},
     )
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -430,7 +442,7 @@ def test_suspect_card2NoExists(client, dataCards):
 
     response = client.post(
         "/games/1/suspect/1",
-        json={"card1Name": "Condesa", "card2Name": "Gato"},
+        json={"card1Name": VictimsNames.CONDESA.value, "card2Name": "Gato"},
     )
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -441,7 +453,10 @@ def test_suspect_twoVictimas(client, dataCards):
 
     response = client.post(
         "/games/1/suspect/1",
-        json={"card1Name": "Conde", "card2Name": "Condesa"},
+        json={
+            "card1Name": VictimsNames.CONDE.value,
+            "card2Name": VictimsNames.CONDESA.value,
+        },
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -452,7 +467,10 @@ def test_suspect_noCurrentTurn(client, dataCards):
 
     response = client.post(
         "/games/1/suspect/2",
-        json={"card1Name": "Conde", "card2Name": "Condesa"},
+        json={
+            "card1Name": VictimsNames.CONDE.value,
+            "card2Name": VictimsNames.CONDESA.value,
+        },
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -469,7 +487,10 @@ def test_replySuspect_success(client, dataSuspect):
 
         client.post(
             "/games/1/suspect/1",
-            json={"card1Name": "Conde", "card2Name": "Drácula"},
+            json={
+                "card1Name": VictimsNames.CONDE.value,
+                "card2Name": MonstersNames.DRACULA.value,
+            },
         )
 
         websocket1.receive_json()  # SUSPICION MADE
@@ -478,14 +499,17 @@ def test_replySuspect_success(client, dataSuspect):
 
         response = client.post(
             "/games/1/replySuspect/2",
-            json={"replyToPlayerId": 1, "cardName": "Drácula"},
+            json={"replyToPlayerId": 1, "cardName": MonstersNames.DRACULA.value},
         )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         ans = websocket1.receive_json()  # SUSPICION RESPONSE
         assert ans["type"] == SUSPICION_RESPONSE_EVENT
-        assert ans["payload"] == {"playerId": 2, "cardName": "Drácula"}
+        assert ans["payload"] == {
+            "playerId": 2,
+            "cardName": MonstersNames.DRACULA.value,
+        }
 
         ans = websocket1.receive_json()  # TURN ENDED
         assert ans["type"] == TURN_ENDED_EVENT
@@ -497,6 +521,7 @@ def test_replySuspect_success(client, dataSuspect):
 
         with db_session:
             assert Player[1].isSuspecting
+
 
 def test_replySuspect_cardNoExists(client, dataSuspect):
 
@@ -513,7 +538,7 @@ def test_replySuspect_playerDontHaveCard(client, dataSuspect):
 
     response = client.post(
         "/games/1/replySuspect/2",
-        json={"replyToPlayerId": 1, "cardName": "Conde"},
+        json={"replyToPlayerId": 1, "cardName": VictimsNames.CONDE.value},
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -524,7 +549,7 @@ def test_replySuspect_repliedNoExists(client, dataSuspect):
 
     response = client.post(
         "/games/1/replySuspect/2",
-        json={"replyToPlayerId": 30, "cardName": "Condesa"},
+        json={"replyToPlayerId": 30, "cardName": VictimsNames.CONDESA.value},
     )
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -538,7 +563,7 @@ def test_replySuspect_repliedNotInGame(client, dataSuspect):
 
     response = client.post(
         "/games/1/replySuspect/2",
-        json={"replyToPlayerId": 10, "cardName": "Condesa"},
+        json={"replyToPlayerId": 10, "cardName": VictimsNames.CONDESA.value},
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -557,7 +582,7 @@ def test_replySuspect_repliedInAnotherGame(client, dataSuspect):
 
     response = client.post(
         "/games/1/replySuspect/2",
-        json={"replyToPlayerId": 10, "cardName": "Condesa"},
+        json={"replyToPlayerId": 10, "cardName": VictimsNames.CONDESA.value},
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -568,7 +593,7 @@ def test_replySuspect_repliedInAnotherGame(client, dataSuspect):
 
     response = client.post(
         "/games/1/replySuspect/2",
-        json={"replyToPlayerId": 1, "cardName": "Condesa"},
+        json={"replyToPlayerId": 1, "cardName": VictimsNames.CONDESA.value},
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN

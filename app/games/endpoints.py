@@ -1,6 +1,7 @@
 from os import stat
 from random import randint
 from typing import List
+from app.enums import CardType
 
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
@@ -8,6 +9,7 @@ from app.games.events import (
     BEGIN_GAME_EVENT,
     DICE_ROLL_EVENT,
     PLAYER_JOINED_EVENT,
+    SUSPICION_FAILED_EVENT,
     SUSPICION_MADE_EVENT,
     SUSPICION_RESPONSE_EVENT,
     TURN_ENDED_EVENT,
@@ -207,7 +209,7 @@ async def suspect(
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": f"La carta {card2Name} no existe"}
 
-        if {card1.type, card2.type} != {"victima", "monstruo"}:
+        if {card1.type, card2.type} != {CardType.VICTIM.value, CardType.MONSTER.value}:
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"Error": "Debes mandar una victima y un monstruo"}
 
@@ -229,8 +231,10 @@ async def suspect(
 
         game = Game[gameId]
 
-        responseInfo = game.findPlayerIdWithCards(cardNames=[card1Name, card2Name], fromPlayerId=playerId)
-        
+        responseInfo = game.findPlayerIdWithCards(
+            cardNames=[card1Name, card2Name], fromPlayerId=playerId
+        )
+
         if responseInfo is None:
             player.isSuspecting = False
             await manager.sendToPlayer(
@@ -252,6 +256,7 @@ async def suspect(
                 gameId,
                 {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id}},
             )
+
         else:
             await manager.sendToPlayer(
                 gameId,
@@ -306,11 +311,12 @@ async def replySuspect(
 
         if not repliedPlayer.isSuspecting:
             response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": f"El jugador {schema.replyToPlayerId} no está sospechando."}
+            return {
+                "Error": f"El jugador {schema.replyToPlayerId} no está sospechando."
+            }
 
         # We now know the replied player exists, it's on the same game as playerId and they are suspecting.
 
-        
         response.status_code = status.HTTP_204_NO_CONTENT
         await manager.sendToPlayer(
             gameId,
@@ -322,9 +328,12 @@ async def replySuspect(
         )
 
         game.incrementTurn()
-        currentPlayer = game.players.filter(lambda player: player.turnOrder == game.currentTurn).first()
+        currentPlayer = game.players.filter(
+            lambda player: player.turnOrder == game.currentTurn
+        ).first()
         await manager.broadcastToGame(
-            gameId, {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id}}
+            gameId,
+            {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id}},
         )
 
 

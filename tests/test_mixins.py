@@ -1,4 +1,5 @@
 from pony.orm import db_session
+from app.enums import MonstersNames, RoomName, VictimsNames
 from app.models import Card, Game, Player
 
 
@@ -41,49 +42,78 @@ def test_setPlayerTurnOrder_success(app, data):
 
     assert len(playerTurns) == len(set(playerTurns))
 
+
 def test_filterCards_noCardsMatching(app, dataSuspect):
 
     with db_session:
         p1 = Player[1]
-        finalCards = p1.filterCards(["Hombre Lobo", "Gato", "Perro"])[:]
+        finalCards = p1.filterCards([MonstersNames.HOMBRE_LOBO.value, "Gato", "Perro"])[
+            :
+        ]
 
         assert finalCards == []
+
 
 def test_filterCards_success(app, dataSuspect):
 
     with db_session:
         p2 = Player[2]
-        finalCards = p2.filterCards(["Condesa", "Gato", "Perro"])[:]
+        finalCards = p2.filterCards([VictimsNames.CONDESA.value, "Gato", "Perro"])[:]
 
-        assert [c.name for c in finalCards] == ["Condesa"]
+        assert [c.name for c in finalCards] == [VictimsNames.CONDESA.value]
+
 
 def test_filterCards_multipleSuccess(app, dataSuspect):
 
     with db_session:
         p2 = Player[2]
-        finalCards = p2.filterCards(["Condesa", "Drácula", "Perro"])[:]
+        finalCards = p2.filterCards(
+            [VictimsNames.CONDESA.value, MonstersNames.DRACULA.value, "Perro"]
+        )[:]
 
-        assert [c.name for c in finalCards] == ["Condesa", "Drácula"]
+        assert [c.name for c in finalCards] == [
+            VictimsNames.CONDESA.value,
+            MonstersNames.DRACULA.value,
+        ]
+
 
 def test_findPlayerIdWithCards_success(app, dataSuspect):
 
     with db_session:
         g1 = Game[1]
 
-        response = g1.findPlayerIdWithCards(["Condesa", "Drácula", "Panteón"], fromPlayerId=1)
+        response = g1.findPlayerIdWithCards(
+            [
+                VictimsNames.CONDESA.value,
+                MonstersNames.DRACULA.value,
+                RoomName.PANTEON.value,
+            ],
+            fromPlayerId=1,
+        )
 
         assert response["playerId"] == 2
-        assert response["cards"] == ["Condesa", "Drácula"]
+        assert response["cards"] == [
+            VictimsNames.CONDESA.value,
+            MonstersNames.DRACULA.value,
+        ]
+
 
 def test_findPlayerIdWithCards_successSecondPlayer(app, dataSuspect):
 
     with db_session:
         g1 = Game[1]
 
-        response = g1.findPlayerIdWithCards(["Conde", "Momia", "Panteón"], fromPlayerId=1)
+        response = g1.findPlayerIdWithCards(
+            [
+                VictimsNames.CONDE.value,
+                MonstersNames.MOMIA.value,
+                RoomName.PANTEON.value,
+            ],
+            fromPlayerId=1,
+        )
 
         assert response["playerId"] == 3
-        assert response["cards"] == ["Conde"]
+        assert response["cards"] == [VictimsNames.CONDE.value]
 
 
 def test_findPlayerIdWithCards_noCards(app, dataSuspect):
@@ -95,22 +125,38 @@ def test_findPlayerIdWithCards_noCards(app, dataSuspect):
 
         assert response is None
 
+
 def test_findPlayerIdWithCards_imLastPlayer(app, dataSuspect):
 
     with db_session:
         g1 = Game[1]
 
-        response = g1.findPlayerIdWithCards(["Panteón", "Condesa", "Doncella"], fromPlayerId=4)
+        response = g1.findPlayerIdWithCards(
+            [
+                RoomName.PANTEON.value,
+                VictimsNames.CONDESA.value,
+                VictimsNames.DONCELLA.value,
+            ],
+            fromPlayerId=4,
+        )
 
         assert response["playerId"] == 1
-        assert response["cards"] == ["Doncella"]
+        assert response["cards"] == [VictimsNames.DONCELLA.value]
+
 
 def test_findPlayerIdWithCards_fromFirstPlayer(app, dataSuspect):
 
     with db_session:
         g1 = Game[1]
 
-        response = g1.findPlayerIdWithCards(["Panteón", "Condesa", "Doncella"], fromPlayerId=1)
+        response = g1.findPlayerIdWithCards(
+            [
+                RoomName.PANTEON.value,
+                VictimsNames.CONDESA.value,
+                VictimsNames.DONCELLA.value,
+            ],
+            fromPlayerId=1,
+        )
 
         assert response["playerId"] == 2
-        assert response["cards"] == ["Condesa"]
+        assert response["cards"] == [VictimsNames.CONDESA.value]
