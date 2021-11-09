@@ -4,13 +4,22 @@ from typing import List, Tuple
 from app.games.boardManager import BoardManager
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
-from app.games.events import (BEGIN_GAME_EVENT, DICE_ROLL_EVENT,
-                              ENTER_ROOM_EVENT, MOVE_PLAYER_EVENT,
-                              PLAYER_JOINED_EVENT, SUSPICION_MADE_EVENT)
-from app.games.exceptions import (GameConnectionDoesNotExist,
-                                  PlayerAlreadyConnected)
-from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
-                               MovePlayerSchema, SuspectSchema, joinGameSchema)
+from app.games.events import (
+    BEGIN_GAME_EVENT,
+    DICE_ROLL_EVENT,
+    ENTER_ROOM_EVENT,
+    MOVE_PLAYER_EVENT,
+    PLAYER_JOINED_EVENT,
+    SUSPICION_MADE_EVENT,
+)
+from app.games.exceptions import GameConnectionDoesNotExist, PlayerAlreadyConnected
+from app.games.schemas import (
+    AvailableGameSchema,
+    CreateGameSchema,
+    MovePlayerSchema,
+    SuspectSchema,
+    joinGameSchema,
+)
 from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import commit, db_session
@@ -105,7 +114,6 @@ async def getDice(gameID: int, playerID: int, response: Response):
             await manager.broadcastToGame(
                 gameID, {"type": DICE_ROLL_EVENT, "payload": ans}
             )
-            # game.incrementTurn()
             response.status_code = status.HTTP_204_NO_CONTENT
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
