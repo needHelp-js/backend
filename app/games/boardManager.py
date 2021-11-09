@@ -410,7 +410,7 @@ class BoardManager:
         return availablePositions, availableRooms
 
     def checkPosition(self, player: Player, diceNumber, position: Tuple):
-        """Check if the position to which the player wants to move to is available for them.
+        """Checks if the position to which the player wants to move to is available for them.
 
         Args:
             player: player who wants to move
@@ -423,7 +423,7 @@ class BoardManager:
         return tuple(position) in availablePositions
 
     def checkRoom(self, player: Player, diceNumber, room: str):
-        """Check if the room to which the player wants to enter to is available for them.
+        """Checks if the room to which the player wants to enter to is available for them.
 
         Args:
             player: player who wants to move
