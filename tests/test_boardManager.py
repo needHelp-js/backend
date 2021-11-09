@@ -199,34 +199,34 @@ def test_moveDown():
     assert [] == availableRooms
 
 
-def test_calculatePositions():
-    availablePositions, availableRooms = board.calculatePositions(0, 0, 6)
+def test_calculateAvailablePositions():
+    availablePositions, availableRooms = board._calculateAvailablePositions(0, 0, 6)
     assert [] == availablePositions
     assert [] == availableRooms
 
     availablePositions = []
     availableRooms = []
-    availablePositions, availableRooms = board.calculatePositions(6, 6, 0)
+    availablePositions, availableRooms = board._calculateAvailablePositions(6, 6, 0)
     assert [] == availablePositions
     assert [] == availableRooms
 
     availablePositions = []
     availableRooms = []
-    availablePositions, availableRooms = board.calculatePositions(2, 6, 2)
+    availablePositions, availableRooms = board._calculateAvailablePositions(2, 6, 2)
     assert [(2, 6), (1, 6), (0, 6), (3, 6), (4, 6)] == availablePositions
     assert ["COCHERA"] == availableRooms
 
 
-def test_checkIfPlayerInRoom(app, boardData):
+def test_calculatePositions(app, boardData):
     with db_session:
 
         p1 = Player.get(id=1)
-        availablePositions, availableRooms = board.checkIfPlayerInRoom(p1, 2)
+        availablePositions, availableRooms = board.calculatePositions(p1, 2)
         assert [(2, 6), (1, 6), (3, 6)] == availablePositions
         assert ["COCHERA"] == availableRooms
 
         p2 = Player.get(id=2)
-        availablePositions, availableRooms = board.checkIfPlayerInRoom(p2, 2)
+        availablePositions, availableRooms = board.calculatePositions(p2, 2)
         assert [(0, 6), (1, 6), (2, 6)] == availablePositions
         assert [] == availableRooms
 

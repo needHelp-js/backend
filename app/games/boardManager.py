@@ -334,7 +334,7 @@ class BoardManager:
                 availableRooms,
             )
 
-    def calculatePositions(self, y, x, diceNumber):
+    def _calculateAvailablePositions(self, y, x, diceNumber):
         """Calcula todas las casillas a las que se puede mover un jugador según el número que obtuvó en el dado
 
         Args:
@@ -370,12 +370,12 @@ class BoardManager:
 
         return availablePositions, availableRooms
 
-    def checkIfPlayerInRoom(self, player: Player, diceNumber):
-        """Se encarga de chequear si el jugador se encuentra en un recinto.
+    def calculatePositions(self, player: Player, diceNumber):
+        """Calcula las posiciones disponibles a partir de la posición del jugador.
 
         En caso de que el jugador se encuentre en un recinto, entonces calcula todas las casillas
         a las que se puede mover a partir de cada una de las salidas del recinto. En caso contrario,
-        simplemente calcula las casillas disponibles a partir de su ubicación
+        simplemente calcula las casillas disponibles a partir de la ubicación del jugador en el tablero.
 
         Args:
             player: jugador que intenta realizar el movimiento
@@ -398,13 +398,13 @@ class BoardManager:
                     availablePositions.append((y, x))
                 else:
                     availablePositions.append((y, x))
-                    l1, l2 = self.calculatePositions(y, x, diceNumber - 1)
+                    l1, l2 = self._calculateAvailablePositions(y, x, diceNumber - 1)
                     availablePositions.extend(l1)
                     availableRooms.extend(l2)
 
         else:
             y, x = self.getPositionTupleFromId(player.position)
-            availablePositions, availableRooms = self.calculatePositions(
+            availablePositions, availableRooms = self._calculateAvailablePositions(
                 y, x, diceNumber
             )
 
@@ -423,7 +423,7 @@ class BoardManager:
             position: posición a la que el jugador quiere moverse
         """
 
-        availablePositions, _ = self.checkIfPlayerInRoom(player, diceNumber)
+        availablePositions, _ = self.calculatePositions(player, diceNumber)
 
         if tuple(position) in availablePositions:
             return True
@@ -439,7 +439,7 @@ class BoardManager:
             room: recinto al que el jugador quiere entrar
         """
 
-        _, availableRooms = self.checkIfPlayerInRoom(player, diceNumber)
+        _, availableRooms = self.calculatePositions(player, diceNumber)
 
         if room in availableRooms:
             return True

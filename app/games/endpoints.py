@@ -169,7 +169,7 @@ async def availablePositions(
         game = Game.get(id=gameId)
         player = Player.get(id=playerId)
 
-        availablePositions, availableRooms = board.checkIfPlayerInRoom(
+        availablePositions, availableRooms = board.calculatePositions(
             player, diceNumber
         )
         return {
