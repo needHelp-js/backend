@@ -1,23 +1,26 @@
 from random import randint
-from typing import List
+from typing import List, Tuple
 
+from app.games.boardManager import BoardManager
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
 from app.games.events import (BEGIN_GAME_EVENT, DEAL_CARDS_EVENT,
-                              DICE_ROLL_EVENT, PLAYER_JOINED_EVENT,
+                              DICE_ROLL_EVENT, ENTER_ROOM_EVENT,
+                              MOVE_PLAYER_EVENT, PLAYER_JOINED_EVENT,
                               SUSPICION_MADE_EVENT)
 from app.games.exceptions import (GameConnectionDoesNotExist,
                                   PlayerAlreadyConnected, PlayerNotConnected)
 from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
-                               SuspectSchema, joinGameSchema)
+                               MovePlayerSchema, SuspectSchema, joinGameSchema)
 from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
-from pony.orm import db_session
+from pony.orm import commit, db_session
 from pony.orm.core import flush
 from starlette.websockets import WebSocketDisconnect
 
 router = APIRouter(prefix="/games")
 manager = GameConnectionManager()
+board = BoardManager()
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -74,6 +77,7 @@ async def beginGame(gameID: int, playerID: int, response: Response):
                 }
             elif game.started == False:
                 game.startGame()
+                board.createBoard()
                 response.status_code = status.HTTP_204_NO_CONTENT
                 await manager.broadcastToGame(
                     gameID, {"type": BEGIN_GAME_EVENT, "payload": None}
@@ -116,7 +120,6 @@ async def getDice(gameID: int, playerID: int, response: Response):
             await manager.broadcastToGame(
                 gameID, {"type": DICE_ROLL_EVENT, "payload": ans}
             )
-            game.incrementTurn()
             response.status_code = status.HTTP_204_NO_CONTENT
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
@@ -167,6 +170,96 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
         return {"playerId": player.id}
 
 
+@router.get("/{gameId}/availablePositions/{playerId}")
+@isPlayersTurn
+async def availablePositions(
+    gameId: int, playerId: int, diceNumber: int, response: Response
+):
+
+    if diceNumber < 1 or diceNumber > 6:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"Error": "Número del dado incorrecto"}
+
+    with db_session:
+        game = Game.get(id=gameId)
+        player = Player.get(id=playerId)
+
+        availablePositions, availableRooms = board.calculatePositions(
+            player, diceNumber
+        )
+        return {
+            "availablePositions": availablePositions,
+            "availableRooms": availableRooms,
+        }
+
+
+@router.patch("/{gameId}/move/{playerId}")
+@isPlayersTurn
+async def movePlayer(
+    gameId: int,
+    playerId: int,
+    data: MovePlayerSchema,
+    response: Response,
+):
+    if data.diceNumber < 1 or data.diceNumber > 6:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"Error": "Número del dado incorrecto"}
+
+    with db_session:
+
+        game = Game.get(id=gameId)
+        player = Player.get(id=playerId)
+
+        if data.position == (-1, -1) and data.room == "":
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"Error": "Faltan parámetros"}
+
+        elif data.position != (-1, -1) and data.room != "":
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"Error": "Parámetros incorrectos"}
+
+        elif data.room != "":
+
+            if board.checkRoom(player, data.diceNumber, data.room):
+                player.room = board.getRoomId(data.room)
+                player.position = None
+                await manager.broadcastToGame(
+                    game.id,
+                    {
+                        "type": ENTER_ROOM_EVENT,
+                        "payload": {
+                            "playerId": player.id,
+                            "playerRoom": board.getRoomName(player.room),
+                        },
+                    },
+                )
+
+            else:
+                response.status_code = status.HTTP_403_FORBIDDEN
+                return {"Error": "Recinto no disponible para este jugador."}
+
+        else:
+
+            if board.checkPosition(player, data.diceNumber, data.position):
+
+                position = board.getPositionIdFromTuple(data.position)
+                player.position = position
+                player.room = None
+                await manager.broadcastToGame(
+                    game.id,
+                    {
+                        "type": MOVE_PLAYER_EVENT,
+                        "payload": {
+                            "playerId": player.id,
+                            "playerPosition": tuple(data.position),
+                        },
+                    },
+                )
+            else:
+                response.status_code = status.HTTP_403_FORBIDDEN
+                return {"Error": "Posición no disponible para este jugador."}
+
+
 @router.get("/{gameId}")
 @gameRequired
 @playerInGame
@@ -183,6 +276,15 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
         dict["players"] = [p.to_dict(exclude=excluded_fields) for p in dict["players"]]
 
         dict["host"] = dict["host"].to_dict(exclude=excluded_fields)
+
+        for player in dict["players"]:
+            player["position"] = board.getPositionTupleFromId(player["position"])
+            player["room"] = board.getRoomName(player["room"])
+
+        dict["host"]["position"] = board.getPositionTupleFromId(
+            dict["host"]["position"]
+        )
+        dict["host"]["room"] = board.getRoomName(dict["host"]["room"])
 
         return dict
 

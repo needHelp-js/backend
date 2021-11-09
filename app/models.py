@@ -1,6 +1,6 @@
 from pony.orm import *
 
-from app.enums import CardType, MonstersNames, RoomName, VictimsNames
+from app.enums import CardType, MonstersNames, RoomsNames, VictimsNames
 from app.mixins import GameMixin
 
 db = Database()
@@ -22,8 +22,9 @@ class Player(db.Entity):
     turnOrder = Optional(int)
     currentGame = Optional(Game, reverse="players")
     hostedGame = Optional(Game, reverse="host")
-    cards = Set("Card")
+    position = Optional(int)
     room = Optional(int)
+    cards = Set("Card")
 
 
 def checkCardType(val):
@@ -40,7 +41,7 @@ def checkCardName(val):
     for elem in MonstersNames:
         if elem.value == val:
             return True
-    for elem in RoomName:
+    for elem in RoomsNames:
         if elem.value == val:
             return True
     return False

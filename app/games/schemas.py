@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Tuple
 
 
 class AvailableGameSchema(BaseModel):
@@ -14,6 +15,12 @@ class CreateGameSchema(BaseModel):
 
 class joinGameSchema(BaseModel):
     playerNickname: str
+
+
+class MovePlayerSchema(BaseModel):
+    diceNumber: int
+    position: Tuple = (-1, -1)
+    room: str = ""
 
 
 class SuspectSchema(BaseModel):
