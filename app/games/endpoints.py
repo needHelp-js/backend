@@ -229,8 +229,7 @@ async def suspect(
 
         game = Game[gameId]
 
-        responseInfo = game.findPlayerIdWithCards(cardNames=[card1Name, card2Name])
-
+        responseInfo = game.findPlayerIdWithCards(cardNames=[card1Name, card2Name], fromPlayerId=playerId)
         if responseInfo == None:
             player.isSuspecting = False
         else:

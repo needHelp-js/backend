@@ -56,12 +56,20 @@ class GameMixin(object):
 
         return cards
 
-    def findPlayerIdWithCards(self, cardNames: List[str]): 
+    def findPlayerIdWithCards(self, cardNames: List[str], fromPlayerId: int): 
         
-        for player in self.players:
-            playerCards = player.filterCards(cardNames)
+        fromTurnOrder = models.Player[fromPlayerId].turnOrder
+        checkingTurn = fromTurnOrder % self.countPlayers()
+        players = self.players.sort_by(models.Player.turnOrder)[:]
+
+        while (checkingTurn + 1 != fromTurnOrder):
+            checkingPlayer = players[checkingTurn]
+
+            playerCards = checkingPlayer.filterCards(cardNames)
             if len(playerCards) > 0:
-                return {"playerId": player.id, "cards": [c.name for c in playerCards]}
+                return {"playerId": checkingPlayer.id, "cards": [c.name for c in playerCards]}
+
+            checkingTurn = (checkingTurn + 1) % self.countPlayers()
 
         return None
 
