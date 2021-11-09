@@ -370,7 +370,7 @@ class BoardManager:
         return availablePositions, availableRooms
 
     def calculatePositions(self, player: Player, diceNumber):
-        """Checks if a player is in a room and calculates all the available positions he can move to
+        """Checks if a player is in a room and calculates all the available positions they can move to
 
         If the player is in a room, then calculates all the availables cells from each exit of the room.
         Otherwise, just calculate the availables cells from the position of the player.
@@ -410,7 +410,7 @@ class BoardManager:
         return availablePositions, availableRooms
 
     def checkPosition(self, player: Player, diceNumber, position: Tuple):
-        """Check if the position to which the player wants to move to is available for him.
+        """Check if the position to which the player wants to move to is available for them.
 
         Args:
             player: player who wants to move
@@ -423,7 +423,7 @@ class BoardManager:
         return tuple(position) in availablePositions
 
     def checkRoom(self, player: Player, diceNumber, room: str):
-        """Check if the room to which the player wants to enter to is available for him.
+        """Check if the room to which the player wants to enter to is available for them.
 
         Args:
             player: player who wants to move
