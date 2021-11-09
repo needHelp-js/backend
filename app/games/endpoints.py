@@ -199,11 +199,11 @@ async def suspect(
         card1 = Card.get(lambda c: c.game.id == gameId and c.name == card1Name)
         card2 = Card.get(lambda c: c.game.id == gameId and c.name == card2Name)
 
-        if card1 == None:
+        if card1 is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": f"La carta {card1Name} no existe"}
 
-        if card2 == None:
+        if card2 is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": f"La carta {card2Name} no existe"}
 
@@ -230,7 +230,8 @@ async def suspect(
         game = Game[gameId]
 
         responseInfo = game.findPlayerIdWithCards(cardNames=[card1Name, card2Name], fromPlayerId=playerId)
-        if responseInfo == None:
+        
+        if responseInfo is None:
             player.isSuspecting = False
         else:
             await manager.sendToPlayer(
@@ -260,7 +261,7 @@ async def replySuspect(
 
         card = Card.get(lambda c: c.game.id == gameId and c.name == schema.cardName)
 
-        if card == None:
+        if card is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": f"La carta {schema.cardName} no existe"}
 
@@ -274,7 +275,7 @@ async def replySuspect(
 
         repliedPlayer = Player.get(id=schema.replyToPlayerId)
 
-        if repliedPlayer == None:
+        if repliedPlayer is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": f"El jugador {schema.replyToPlayerId} no existe"}
 
@@ -290,8 +291,9 @@ async def replySuspect(
 
         # We now know the replied player exists, it's on the same game as playerId and they are suspecting.
 
+        
         response.status_code = status.HTTP_204_NO_CONTENT
-        manager.sendToPlayer(
+        await manager.sendToPlayer(
             gameId,
             schema.replyToPlayerId,
             {
@@ -301,9 +303,9 @@ async def replySuspect(
         )
 
         game.incrementTurn()
-        currentPlayerId = game.players.get(turnOrder=game.currentTurn)
-        manager.broadcastToGame(
-            gameId, {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayerId}}
+        currentPlayer = game.players.filter(lambda player: player.turnOrder == game.currentTurn).first()
+        await manager.broadcastToGame(
+            gameId, {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id}}
         )
 
 
