@@ -1,5 +1,6 @@
-from pydantic import BaseModel
 from typing import Tuple
+
+from pydantic import BaseModel
 
 
 class AvailableGameSchema(BaseModel):
@@ -26,3 +27,8 @@ class MovePlayerSchema(BaseModel):
 class SuspectSchema(BaseModel):
     card1Name: str
     card2Name: str
+
+
+class ReplySuspectSchema(BaseModel):
+    replyToPlayerId: int
+    cardName: str

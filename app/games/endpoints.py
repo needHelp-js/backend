@@ -1,17 +1,22 @@
+from os import stat
 from random import randint
 from typing import List, Tuple
 
+from app.enums import CardType
 from app.games.boardManager import BoardManager
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
 from app.games.events import (BEGIN_GAME_EVENT, DEAL_CARDS_EVENT,
                               DICE_ROLL_EVENT, ENTER_ROOM_EVENT,
                               MOVE_PLAYER_EVENT, PLAYER_JOINED_EVENT,
-                              SUSPICION_MADE_EVENT)
+                              SUSPICION_FAILED_EVENT, SUSPICION_MADE_EVENT,
+                              SUSPICION_RESPONSE_EVENT, TURN_ENDED_EVENT,
+                              YOU_ARE_SUSPICIOUS_EVENT)
 from app.games.exceptions import (GameConnectionDoesNotExist,
                                   PlayerAlreadyConnected, PlayerNotConnected)
 from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
-                               MovePlayerSchema, SuspectSchema, joinGameSchema)
+                               MovePlayerSchema, ReplySuspectSchema,
+                               SuspectSchema, joinGameSchema)
 from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import commit, db_session
@@ -299,18 +304,23 @@ async def suspect(
 
         player = Player[playerId]
 
-        card1 = Card.get(lambda c: c.game.id == gameId and c.name == schema.card1Name)
-        card2 = Card.get(lambda c: c.game.id == gameId and c.name == schema.card2Name)
+        card1Name = schema.card1Name
+        card2Name = schema.card2Name
 
-        if card1 == None:
+        card1 = Card.get(lambda c: c.game.id == gameId and c.name == card1Name)
+        card2 = Card.get(lambda c: c.game.id == gameId and c.name == card2Name)
+
+        playerRoom = board.getRoomName(player.room)
+
+        if card1 is None:
             response.status_code = status.HTTP_404_NOT_FOUND
-            return {"Error": f"La carta {schema.card1Name} no existe"}
+            return {"Error": f"La carta {card1Name} no existe"}
 
-        if card2 == None:
+        if card2 is None:
             response.status_code = status.HTTP_404_NOT_FOUND
-            return {"Error": f"La carta {schema.card2Name} no existe"}
+            return {"Error": f"La carta {card2Name} no existe"}
 
-        if {card1.type, card2.type} != {"victima", "monstruo"}:
+        if {card1.type, card2.type} != {CardType.VICTIM.value, CardType.MONSTER.value}:
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"Error": "Debes mandar una victima y un monstruo"}
 
@@ -321,11 +331,125 @@ async def suspect(
                 "type": SUSPICION_MADE_EVENT,
                 "payload": {
                     "playerId": playerId,
-                    "card1Name": schema.card1Name,
-                    "card2Name": schema.card2Name,
-                    "roomId": player.room,
+                    "card1Name": card1Name,
+                    "card2Name": card2Name,
+                    "roomName": playerRoom,
                 },
             },
+        )
+
+        player.isSuspecting = True
+
+        game = Game[gameId]
+
+        cardNames = [card1Name, card2Name]
+
+        if playerRoom is not None:
+            cardNames.append(playerRoom)
+
+        responseInfo = game.findPlayerIdWithCards(
+            cardNames=cardNames, fromPlayerId=playerId
+        )
+
+        if responseInfo is None:
+            player.isSuspecting = False
+            await manager.sendToPlayer(
+                gameId,
+                playerId,
+                {
+                    "type": SUSPICION_FAILED_EVENT,
+                    "payload": {
+                        "Error": "No hay jugadores que posean alguna de las cartas que sospechaste"
+                    },
+                },
+            )
+
+            game.incrementTurn()
+            currentPlayer = game.players.filter(
+                lambda player: player.turnOrder == game.currentTurn
+            ).first()
+            await manager.broadcastToGame(
+                gameId,
+                {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id}},
+            )
+
+        else:
+            await manager.sendToPlayer(
+                gameId,
+                responseInfo["playerId"],
+                {
+                    "type": YOU_ARE_SUSPICIOUS_EVENT,
+                    "payload": {
+                        "playerId": playerId,
+                        "cards": responseInfo["cards"],
+                    },
+                },
+            )
+
+
+@router.post("/{gameId}/replySuspect/{playerId}")
+@gameRequired
+@playerInGame
+async def replySuspect(
+    gameId: int, playerId: int, schema: ReplySuspectSchema, response: Response
+):
+
+    with db_session:
+
+        game = Game[gameId]
+        player = Player[playerId]
+
+        card = Card.get(lambda c: c.game.id == gameId and c.name == schema.cardName)
+
+        if card is None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": f"La carta {schema.cardName} no existe"}
+
+        if card not in player.cards:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {
+                "Error": f"El jugador {playerId} no tiene la carta {schema.cardName}"
+            }
+
+        # We now know that the selected card is valid and the player has it.
+
+        repliedPlayer = Player.get(id=schema.replyToPlayerId)
+
+        if repliedPlayer is None:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"Error": f"El jugador {schema.replyToPlayerId} no existe"}
+
+        if repliedPlayer.currentGame != game:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {
+                "Error": f"El jugador {schema.replyToPlayerId} no está en la partida {gameId}"
+            }
+
+        if not repliedPlayer.isSuspecting:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {
+                "Error": f"El jugador {schema.replyToPlayerId} no está sospechando."
+            }
+
+        # We now know the replied player exists, it's on the same game as playerId and they are suspecting.
+
+        response.status_code = status.HTTP_204_NO_CONTENT
+        await manager.sendToPlayer(
+            gameId,
+            schema.replyToPlayerId,
+            {
+                "type": SUSPICION_RESPONSE_EVENT,
+                "payload": {"playerId": playerId, "cardName": schema.cardName},
+            },
+        )
+
+        game.incrementTurn()
+        currentPlayer = game.players.filter(
+            lambda player: player.turnOrder == game.currentTurn
+        ).first()
+        await manager.broadcastToGame(
+            gameId,
+            {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id}},
         )
 
 

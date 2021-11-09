@@ -1,4 +1,5 @@
 from random import randrange
+from typing import List
 
 from app import models
 from app.enums import CardType, MonstersNames, RoomsNames, VictimsNames
@@ -61,17 +62,37 @@ class GameMixin(object):
 
         i = randrange(len(cards["victims"]))
         cards["victims"][i].isInEnvelope = True
-        del cards["victims"][i];
+        del cards["victims"][i]
 
         i = randrange(len(cards["monsters"]))
         cards["monsters"][i].isInEnvelope = True
-        del cards["monsters"][i];
+        del cards["monsters"][i]
 
         i = randrange(len(cards["rooms"]))
         cards["rooms"][i].isInEnvelope = True
-        del cards["rooms"][i];
+        del cards["rooms"][i]
 
         return cards
+
+    def findPlayerIdWithCards(self, cardNames: List[str], fromPlayerId: int):
+
+        fromTurnOrder = models.Player[fromPlayerId].turnOrder
+        checkingTurn = fromTurnOrder % self.countPlayers()
+        players = self.players.sort_by(models.Player.turnOrder)[:]
+
+        while checkingTurn + 1 != fromTurnOrder:
+            checkingPlayer = players[checkingTurn]
+
+            playerCards = checkingPlayer.filterCards(cardNames)
+            if len(playerCards) > 0:
+                return {
+                    "playerId": checkingPlayer.id,
+                    "cards": [c.name for c in playerCards],
+                }
+
+            checkingTurn = (checkingTurn + 1) % self.countPlayers()
+
+        return None
 
     def assignCardsToPlayers(self, cards):
 
@@ -85,3 +106,8 @@ class GameMixin(object):
         while len(card_set) > 0:
             players[i % len(players)].cards.add(card_set.pop())
             i += 1
+
+
+class PlayerMixin:
+    def filterCards(self, cardNames: List[str]):
+        return self.cards.filter(lambda card: card.name in cardNames)

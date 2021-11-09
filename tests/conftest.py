@@ -2,6 +2,7 @@ import os
 
 import pytest
 from app.api import create_app
+from app.enums import CardType, MonstersNames, RoomsNames, VictimsNames
 from app.games.connections import GameConnectionManager
 from app.models import Card, Game, Player
 from config import Config
@@ -152,3 +153,51 @@ def dataCards():
         flush()
 
         g1.players.add([p1, p2])
+
+
+@pytest.fixture
+def dataSuspect():
+    with db_session:
+        p1 = Player(id=1, nickname="p1", turnOrder=1)
+        p2 = Player(id=2, nickname="p2", turnOrder=2)
+        p3 = Player(id=3, nickname="p3", turnOrder=3)
+        p4 = Player(id=4, nickname="p4", turnOrder=4)
+        g1 = Game(id=1, name="g1", host=p1, currentTurn=1)
+
+        flush()
+
+        g1.players.add([p1, p2, p3, p4])
+
+        c1 = Card(
+            id=1, type=CardType.VICTIM.value, name=VictimsNames.CONDE.value, game=g1
+        )
+        c2 = Card(
+            id=2, type=CardType.VICTIM.value, name=VictimsNames.CONDESA.value, game=g1
+        )
+        c3 = Card(
+            id=3, type=CardType.MONSTER.value, name=MonstersNames.DRACULA.value, game=g1
+        )
+        c4 = Card(
+            id=4,
+            type=CardType.MONSTER.value,
+            name=MonstersNames.HOMBRE_LOBO.value,
+            game=g1,
+        )
+        c5 = Card(
+            id=5, type=CardType.ROOM.value, name=RoomsNames.COCHERA.value, game=g1
+        )
+        c6 = Card(
+            id=6, type=CardType.ROOM.value, name=RoomsNames.PANTEON.value, game=g1
+        )
+
+        c7 = Card(
+            id=7, type=CardType.VICTIM.value, name=VictimsNames.MAYORDOMO.value, game=g1
+        )
+        c8 = Card(
+            id=8, type=CardType.VICTIM.value, name=VictimsNames.DONCELLA.value, game=g1
+        )
+
+        p1.cards.add(c8)
+        p2.cards.add([c2, c3, c5])
+        p3.cards.add(c1)
+        p4.cards.add(c6)
