@@ -8,7 +8,7 @@ from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
 from app.games.events import (BEGIN_GAME_EVENT, DEAL_CARDS_EVENT,
                               DICE_ROLL_EVENT, ENTER_ROOM_EVENT,
-                              MOVE_PLAYER_EVENT, PLAYER_JOINED_EVENT,
+                              MOVE_PLAYER_EVENT, PLAYER_JOINED_EVENT, PLAYER_REPLIED_EVENT,
                               SUSPICION_FAILED_EVENT, SUSPICION_MADE_EVENT,
                               SUSPICION_RESPONSE_EVENT, TURN_ENDED_EVENT,
                               YOU_ARE_SUSPICIOUS_EVENT)
@@ -352,13 +352,12 @@ async def suspect(
 
         if responseInfo is None:
             player.isSuspecting = False
-            await manager.sendToPlayer(
+            await manager.broadcastToGame(
                 gameId,
-                playerId,
                 {
                     "type": SUSPICION_FAILED_EVENT,
                     "payload": {
-                        "Error": "No hay jugadores que posean alguna de las cartas que sospechaste"
+                        "Error": "No hay jugadores que posean alguna de las cartas de la sospecha."
                     },
                 },
             )
@@ -439,6 +438,14 @@ async def replySuspect(
             {
                 "type": SUSPICION_RESPONSE_EVENT,
                 "payload": {"playerId": playerId, "cardName": schema.cardName},
+            },
+        )
+
+        await manager.broadcastToGame(
+            gameId,
+            {
+                "type": PLAYER_REPLIED_EVENT,
+                "payload": {"playerId": playerId},
             },
         )
 
