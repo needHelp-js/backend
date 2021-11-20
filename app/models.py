@@ -14,6 +14,7 @@ class Game(db.Entity, GameMixin):
     players = Set("Player", reverse="currentGame")
     host = Required("Player", reverse="hostedGame")
     cards = Set("Card")
+    password = Optional(str, default="")
 
 
 class Player(db.Entity, PlayerMixin):
