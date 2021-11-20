@@ -36,7 +36,11 @@ def createGame(gameCreationData: CreateGameSchema, response: Response):
             return {"Error": f"Partida {gameCreationData.gameName} ya existe"}
 
         hostPlayer = Player(nickname=gameCreationData.hostNickname)
-        newGame = Game(name=gameCreationData.gameName, host=hostPlayer, password=gameCreationData.password)
+        newGame = Game(
+            name=gameCreationData.gameName,
+            host=hostPlayer,
+            password=gameCreationData.password,
+        )
 
         flush()
 
@@ -63,7 +67,7 @@ async def getGames():
                 gameDict["hasPassword"] = True
             else:
                 gameDict["hasPassword"] = False
-            
+
             gamesList.append(gameDict)
 
         return gamesList
@@ -163,6 +167,14 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
         if game.countPlayers() == 6:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": f"La partida {gameId} ya esta llena."}
+
+        if game.password != joinGameData.password:
+            if game.password == "":
+                response.status_code = status.HTTP_403_FORBIDDEN
+                return {"Error": "Esta partida no tiene contraseña"}
+            if game.password != "":
+                response.status_code = status.HTTP_403_FORBIDDEN
+                return {"Error": "Contraseña incorrecta"}
 
         player = Player(nickname=joinGameData.playerNickname)
 

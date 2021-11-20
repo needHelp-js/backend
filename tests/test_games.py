@@ -16,6 +16,7 @@ from fastapi import status
 from pony.orm import db_session
 from pony.orm.core import flush
 
+
 def test_createGame_success(client):
     gameName = "Game test"
     hostNickname = "test_host_nickname"
@@ -32,12 +33,13 @@ def test_createGame_success(client):
     with db_session:
         game = Game.get(name=gameName)
         player = Player.get(nickname=hostNickname)
-        
+
         playerCount = len(game.players)
         assert playerCount == 1
         assert game.password == ""
 
     assert response.json() == {"idPartida": game.id, "idHost": player.id}
+
 
 def test_createGameWithPassword_success(client):
     gameName = "Game test"
@@ -49,7 +51,8 @@ def test_createGameWithPassword_success(client):
         assert game == None
 
     response = client.post(
-        "/games", json={"gameName": gameName, "hostNickname": hostNickname, "password": password}
+        "/games",
+        json={"gameName": gameName, "hostNickname": hostNickname, "password": password},
     )
 
     assert response.status_code == status.HTTP_201_CREATED
@@ -89,6 +92,7 @@ def test_getGames_success(client, dataListGames):
         {"id": 5, "name": "g5", "hasPassword": False, "playerCount": 4},
     ]
 
+
 def test_getGamesWithPassword_success(client, dataPasswordGame):
 
     response = client.get("/games")
@@ -96,6 +100,7 @@ def test_getGamesWithPassword_success(client, dataPasswordGame):
     assert response.status_code == 200
     assert response.json() == [
         {"id": 1, "name": "g1", "hasPassword": True, "playerCount": 1},
+        {"id": 2, "name": "g2", "hasPassword": False, "playerCount": 1},
     ]
 
 
@@ -103,7 +108,9 @@ def test_getGames_game_with_no_players(client, dataGameNoPlayers):
     response = client.get("/games")
 
     assert response.status_code == 200
-    assert response.json() == [{"id": 1, "name": "g1", "hasPassword": False, "playerCount": 0}]
+    assert response.json() == [
+        {"id": 1, "name": "g1", "hasPassword": False, "playerCount": 0}
+    ]
 
 
 def test_getGames_no_games(client):
@@ -302,6 +309,46 @@ def test_joinGame_success(client, dataGameNoPlayers):
                 "type": PLAYER_JOINED_EVENT,
                 "payload": {"playerId": player.id, "playerNickname": player.nickname},
             }
+
+
+def test_joinGameWithPassword_success(client, dataPasswordGame):
+
+    manager.createGameConnection(1)
+
+    with client.websocket_connect("/games/1/ws/2") as websocket:
+        response = client.patch(
+            "/games/1/join", json={"playerNickname": "p3", "password": "1234"}
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {"playerId": 3}
+
+        data = websocket.receive_json()
+        with db_session:
+            player = Player.get(nickname="p3")
+            assert data == {
+                "type": PLAYER_JOINED_EVENT,
+                "payload": {"playerId": player.id, "playerNickname": player.nickname},
+            }
+
+
+def test_joinGame_failure_wrongPassword(client, dataPasswordGame):
+
+    response = client.patch(
+        "/games/1/join", json={"playerNickname": "p2", "password": "123"}
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {"Error": "Contraseña incorrecta"}
+
+
+def test_joinGame_failure_noPasswordGame(client, dataPasswordGame):
+
+    response = client.patch(
+        "/games/2/join", json={"playerNickname": "p4", "password": "123"}
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {"Error": "Esta partida no tiene contraseña"}
 
 
 def test_joinGame_failure_gameDoesntExist(client):

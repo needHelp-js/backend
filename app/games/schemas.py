@@ -18,6 +18,7 @@ class CreateGameSchema(BaseModel):
 
 class joinGameSchema(BaseModel):
     playerNickname: str
+    password: str = ""
 
 
 class MovePlayerSchema(BaseModel):
