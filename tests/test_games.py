@@ -266,6 +266,29 @@ def test_joinGame_success(client, dataGameNoPlayers):
                 "payload": {"playerId": player.id, "playerNickname": player.nickname},
             }
 
+def test_joinGameWithPassword_success(client, dataPasswordGame):
+
+    manager.createGameConnection(1)
+
+    with client.websocket_connect("/games/1/ws/2") as websocket:
+        response = client.patch("/games/1/join", json={"playerNickname": "p2", "password": "1234"})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {"playerId": 2}
+
+        data = websocket.receive_json()
+        with db_session:
+            player = Player.get(nickname="p2")
+            assert data == {
+                "type": PLAYER_JOINED_EVENT,
+                "payload": {"playerId": player.id, "playerNickname": player.nickname},
+            }
+
+def test_joinGame_failure_wrongPassword(client, dataPasswordGame):
+
+    response = client.patch("/games/1/join", json={"playerNickname": "p2", "password": "123"})
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {"Error": "Contraseña incorrecta"}
 
 def test_joinGame_failure_gameDoesntExist(client):
 

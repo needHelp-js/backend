@@ -36,7 +36,7 @@ def createGame(gameCreationData: CreateGameSchema, response: Response):
             return {"Error": f"Partida {gameCreationData.gameName} ya existe"}
 
         hostPlayer = Player(nickname=gameCreationData.hostNickname)
-        newGame = Game(name=gameCreationData.gameName, host=hostPlayer)
+        newGame = Game(name=gameCreationData.gameName, host=hostPlayer, password=gameCreationData.password)
 
         flush()
 
@@ -158,6 +158,10 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": f"La partida {gameId} ya esta llena."}
 
+        if game.password != joinGameData.password:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": "Contraseña incorrecta"}
+
         player = Player(nickname=joinGameData.playerNickname)
 
         flush()
@@ -274,7 +278,7 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
         game = Game.get(id=gameId)
 
         dict = game.to_dict(
-            related_objects=True, with_collections=True, exclude="cards"
+            related_objects=True, with_collections=True, exclude=["cards", "password"]
         )
         excluded_fields = ["hostedGame", "currentGame"]
 
