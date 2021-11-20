@@ -1,4 +1,5 @@
 from random import randrange
+from sys import set_asyncgen_hooks
 from typing import List
 
 from app import models
@@ -16,6 +17,12 @@ class GameMixin(object):
             self.currentTurn = 1
         else:
             self.currentTurn += 1
+
+        if self.currentPlayer().hasLost:
+            self.incrementTurn()
+
+    def currentPlayer(self):
+        return self.players.get(lambda p: p.turnOrder == self.currentTurn)
 
     def setPlayersTurnOrder(self):
         turnToAssign = 1
@@ -111,3 +118,8 @@ class GameMixin(object):
 class PlayerMixin:
     def filterCards(self, cardNames: List[str]):
         return self.cards.filter(lambda card: card.name in cardNames)
+
+    def setLost(self):
+        self.hasLost = True
+        self.position = None
+        self.room = None

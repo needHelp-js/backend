@@ -309,6 +309,7 @@ def test_getGameDetails_success(client, dataListGames):
                 "isSuspecting": False,
                 "position": None,
                 "room": None,
+                "hasLost": False
             }
         ],
         "host": {
@@ -318,6 +319,7 @@ def test_getGameDetails_success(client, dataListGames):
             "isSuspecting": False,
             "position": None,
             "room": None,
+            "hasLost": False
         },
     }
 
@@ -343,6 +345,7 @@ def test_getGameDetails_startedGame(client, dataListGames):
                 "isSuspecting": False,
                 "position": [0, 6],
                 "room": None,
+                "hasLost": False
             }
         ],
         "host": {
@@ -352,6 +355,7 @@ def test_getGameDetails_startedGame(client, dataListGames):
             "isSuspecting": False,
             "position": [0, 6],
             "room": None,
+            "hasLost": False
         },
     }
 
@@ -373,6 +377,7 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
                 "position": None,
                 "room": None,
                 "isSuspecting": False,
+                "hasLost": False
             },
             {
                 "id": 2,
@@ -381,6 +386,7 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
                 "position": None,
                 "room": None,
                 "isSuspecting": False,
+                "hasLost": False
             },
         ],
         "host": {
@@ -390,6 +396,7 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
             "isSuspecting": False,
             "position": None,
             "room": None,
+            "hasLost": False
         },
     }
 
