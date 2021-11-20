@@ -85,8 +85,17 @@ def test_getGames_success(client, dataListGames):
 
     assert response.status_code == 200
     assert response.json() == [
-        {"id": 1, "name": "g1", "playerCount": 1},
-        {"id": 5, "name": "g5", "playerCount": 4},
+        {"id": 1, "name": "g1", "hasPassword": False, "playerCount": 1},
+        {"id": 5, "name": "g5", "hasPassword": False, "playerCount": 4},
+    ]
+
+def test_getGamesWithPassword_success(client, dataPasswordGame):
+
+    response = client.get("/games")
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {"id": 1, "name": "g1", "hasPassword": True, "playerCount": 1},
     ]
 
 
@@ -94,7 +103,7 @@ def test_getGames_game_with_no_players(client, dataGameNoPlayers):
     response = client.get("/games")
 
     assert response.status_code == 200
-    assert response.json() == [{"id": 1, "name": "g1", "playerCount": 0}]
+    assert response.json() == [{"id": 1, "name": "g1", "hasPassword": False, "playerCount": 0}]
 
 
 def test_getGames_no_games(client):
