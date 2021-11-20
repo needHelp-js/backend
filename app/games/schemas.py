@@ -12,6 +12,7 @@ class AvailableGameSchema(BaseModel):
 class CreateGameSchema(BaseModel):
     gameName: str
     hostNickname: str
+    password: str = ""
 
 
 class joinGameSchema(BaseModel):

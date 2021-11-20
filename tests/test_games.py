@@ -16,10 +16,13 @@ from fastapi import status
 from pony.orm import db_session
 from pony.orm.core import flush
 
-
 def test_createGame_success(client):
     gameName = "Game test"
     hostNickname = "test_host_nickname"
+
+    with db_session:
+        game = Game.get(name=gameName)
+        assert game == None
 
     response = client.post(
         "/games", json={"gameName": gameName, "hostNickname": hostNickname}
@@ -29,7 +32,32 @@ def test_createGame_success(client):
     with db_session:
         game = Game.get(name=gameName)
         player = Player.get(nickname=hostNickname)
+        
+        playerCount = len(game.players)
+        assert playerCount == 1
+        assert game.password == ""
 
+    assert response.json() == {"idPartida": game.id, "idHost": player.id}
+
+def test_createGameWithPassword_success(client):
+    gameName = "Game test"
+    hostNickname = "test_host_nickname"
+    password = "Password"
+
+    with db_session:
+        game = Game.get(name=gameName)
+        assert game == None
+
+    response = client.post(
+        "/games", json={"gameName": gameName, "hostNickname": hostNickname, "password": password}
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    with db_session:
+        game = Game.get(name=gameName)
+        player = Player.get(nickname=hostNickname)
+
+        assert game.password == password
         playerCount = len(game.players)
         assert playerCount == 1
 
