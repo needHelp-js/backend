@@ -36,6 +36,7 @@ def app():
 def client(app):
     return TestClient(app)
 
+
 @pytest.fixture
 def dataPasswordGame():
     with db_session:
@@ -47,6 +48,7 @@ def dataPasswordGame():
 
         g1.players.add(p1)
         g2.players.add(p2)
+
 
 @pytest.fixture
 def dataListGames():

@@ -36,7 +36,11 @@ def createGame(gameCreationData: CreateGameSchema, response: Response):
             return {"Error": f"Partida {gameCreationData.gameName} ya existe"}
 
         hostPlayer = Player(nickname=gameCreationData.hostNickname)
-        newGame = Game(name=gameCreationData.gameName, host=hostPlayer, password=gameCreationData.password)
+        newGame = Game(
+            name=gameCreationData.gameName,
+            host=hostPlayer,
+            password=gameCreationData.password,
+        )
 
         flush()
 
@@ -63,7 +67,7 @@ async def getGames():
                 gameDict["hasPassword"] = True
             else:
                 gameDict["hasPassword"] = False
-            
+
             gamesList.append(gameDict)
 
         return gamesList
