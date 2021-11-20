@@ -96,6 +96,7 @@ def test_getGamesWithPassword_success(client, dataPasswordGame):
     assert response.status_code == 200
     assert response.json() == [
         {"id": 1, "name": "g1", "hasPassword": True, "playerCount": 1},
+        {"id": 2, "name": "g2", "hasPassword": False, "playerCount": 1},
     ]
 
 
@@ -308,13 +309,13 @@ def test_joinGameWithPassword_success(client, dataPasswordGame):
     manager.createGameConnection(1)
 
     with client.websocket_connect("/games/1/ws/2") as websocket:
-        response = client.patch("/games/1/join", json={"playerNickname": "p2", "password": "1234"})
+        response = client.patch("/games/1/join", json={"playerNickname": "p3", "password": "1234"})
         assert response.status_code == status.HTTP_200_OK
-        assert response.json() == {"playerId": 2}
+        assert response.json() == {"playerId": 3}
 
         data = websocket.receive_json()
         with db_session:
-            player = Player.get(nickname="p2")
+            player = Player.get(nickname="p3")
             assert data == {
                 "type": PLAYER_JOINED_EVENT,
                 "payload": {"playerId": player.id, "playerNickname": player.nickname},
@@ -326,6 +327,13 @@ def test_joinGame_failure_wrongPassword(client, dataPasswordGame):
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json() == {"Error": "Contraseña incorrecta"}
+
+def test_joinGame_failure_noPasswordGame(client, dataPasswordGame):
+
+    response = client.patch("/games/2/join", json={"playerNickname": "p4    ", "password": "123"})
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {"Error": "Esta partida no tiene contraseña"}
 
 def test_joinGame_failure_gameDoesntExist(client):
 

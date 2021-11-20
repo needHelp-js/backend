@@ -165,8 +165,12 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
             return {"Error": f"La partida {gameId} ya esta llena."}
 
         if game.password != joinGameData.password:
-            response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": "Contraseña incorrecta"}
+            if game.password == "":
+                response.status_code = status.HTTP_403_FORBIDDEN
+                return {"Error": "Esta partida no tiene contraseña"}
+            if game.password != "":
+                response.status_code = status.HTTP_403_FORBIDDEN
+                return {"Error": "Contraseña incorrecta"}
 
         player = Player(nickname=joinGameData.playerNickname)
 
