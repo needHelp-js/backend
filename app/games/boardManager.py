@@ -11,9 +11,9 @@ class Room:
         self.entries = entries
 
 class SpecialCell:
-    def __init__(self, initialPosition: Tuple, transportPosition: Tuple):
+    def __init__(self, initialPosition: Tuple, teleportPosition: Tuple):
         self.initialPosition = initialPosition
-        self.transportPosition = transportPosition
+        self.teleportPosition = teleportPosition
 
 class BoardManager:
     def __init__(self):
@@ -93,21 +93,21 @@ class BoardManager:
         self._board[3][13] = "!"
         self._board[14][13] = "!"
         
-        specialCell1 = SpecialCell(initialPosition=(6, 3), transportPosition=(6, 14))
+        specialCell1 = SpecialCell(initialPosition=(6, 3), teleportPosition=(6, 14))
         self._specialCells.append(specialCell1)
-        specialCell2 = SpecialCell(initialPosition=(6, 14), transportPosition=(6, 3))
+        specialCell2 = SpecialCell(initialPosition=(6, 14), teleportPosition=(6, 3))
         self._specialCells.append(specialCell2)
-        specialCell3 = SpecialCell(initialPosition=(13, 4), transportPosition=(13, 15))
+        specialCell3 = SpecialCell(initialPosition=(13, 4), teleportPosition=(13, 15))
         self._specialCells.append(specialCell3)
-        specialCell4 = SpecialCell(initialPosition=(13, 15), transportPosition=(13, 4))
+        specialCell4 = SpecialCell(initialPosition=(13, 15), teleportPosition=(13, 4))
         self._specialCells.append(specialCell4)
-        specialCell5 = SpecialCell(initialPosition=(4, 6), transportPosition=(14, 6))
+        specialCell5 = SpecialCell(initialPosition=(4, 6), teleportPosition=(14, 6))
         self._specialCells.append(specialCell5)
-        specialCell6 = SpecialCell(initialPosition=(14, 6), transportPosition=(4, 6))
+        specialCell6 = SpecialCell(initialPosition=(14, 6), teleportPosition=(4, 6))
         self._specialCells.append(specialCell6)
-        specialCell7 = SpecialCell(initialPosition=(3, 13), transportPosition=(14, 13))
+        specialCell7 = SpecialCell(initialPosition=(3, 13), teleportPosition=(14, 13))
         self._specialCells.append(specialCell7)
-        specialCell8 = SpecialCell(initialPosition=(14, 13), transportPosition=(3, 13))
+        specialCell8 = SpecialCell(initialPosition=(14, 13), teleportPosition=(3, 13))
         self._specialCells.append(specialCell8)
         
 
@@ -192,7 +192,7 @@ class BoardManager:
 
         for c in self._specialCells:
             if (y, x) == c.initialPosition:
-                return c.transportPosition[0], c.transportPosition[1]    
+                return c.teleportPosition[0], c.teleportPosition[1]    
     
         return None
 
