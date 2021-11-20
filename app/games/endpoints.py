@@ -8,15 +8,17 @@ from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
 from app.games.events import (BEGIN_GAME_EVENT, DEAL_CARDS_EVENT,
                               DICE_ROLL_EVENT, ENTER_ROOM_EVENT,
-                              MOVE_PLAYER_EVENT, PLAYER_JOINED_EVENT,
-                              SUSPICION_FAILED_EVENT, SUSPICION_MADE_EVENT,
-                              SUSPICION_RESPONSE_EVENT, TURN_ENDED_EVENT,
-                              YOU_ARE_SUSPICIOUS_EVENT)
+                              MOVE_PLAYER_EVENT, PLAYER_ACCUSED_EVENT,
+                              PLAYER_JOINED_EVENT, PLAYER_LOST_EVENT,
+                              PLAYER_WON_EVENT, SUSPICION_FAILED_EVENT,
+                              SUSPICION_MADE_EVENT, SUSPICION_RESPONSE_EVENT,
+                              TURN_ENDED_EVENT, YOU_ARE_SUSPICIOUS_EVENT)
 from app.games.exceptions import (GameConnectionDoesNotExist,
                                   PlayerAlreadyConnected, PlayerNotConnected)
-from app.games.schemas import (AvailableGameSchema, CreateGameSchema,
-                               MovePlayerSchema, ReplySuspectSchema,
-                               SuspectSchema, joinGameSchema)
+from app.games.schemas import (AccuseSchema, AvailableGameSchema,
+                               CreateGameSchema, MovePlayerSchema,
+                               ReplySuspectSchema, SuspectSchema,
+                               joinGameSchema)
 from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import commit, db_session
@@ -450,6 +452,68 @@ async def replySuspect(
             gameId,
             {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id}},
         )
+
+
+@router.post("/{gameId}/accuse/{playerId}")
+@isPlayersTurn
+async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Response):
+
+    with db_session:
+
+        player = Player[playerId]
+
+        victimCardName = schema.victimCardName
+        monsterCardName = schema.monsterCardName
+        roomCardName = schema.roomCardName
+
+        victimCard = Card.get(
+            lambda c: c.game.id == gameId and c.name == victimCardName.value
+        )
+        monsterCard = Card.get(
+            lambda c: c.game.id == gameId and c.name == monsterCardName.value
+        )
+        roomCard = Card.get(
+            lambda c: c.game.id == gameId and c.name == roomCardName.value
+        )
+        # TODO: Preguntarle al front lo del error de las cartas que no existen
+
+        await manager.broadcastToGame(
+            gameId,
+            {
+                "type": PLAYER_ACCUSED_EVENT,
+                "payload": {
+                    "playerId": playerId,
+                    "victimCardName": victimCardName.value,
+                    "monsterCardName": monsterCardName.value,
+                    "roomCardName": roomCardName.value,
+                },
+            },
+        )
+
+        cardsInEnvelope = Card.select(lambda c: c.game.id == gameId and c.isInEnvelope)[
+            :
+        ]
+
+        response.status_code = status.HTTP_204_NO_CONTENT
+
+        if set([victimCard, monsterCard, roomCard]) != set(cardsInEnvelope):
+            await manager.broadcastToGame(
+                gameId,
+                {
+                    "type": PLAYER_LOST_EVENT,
+                    "payload": {"playerId": playerId},
+                },
+            )
+
+        else:
+            await manager.broadcastToGame(
+                gameId,
+                {
+                    "type": PLAYER_WON_EVENT,
+                    "payload": {"playerId": playerId},
+                },
+            )
+            
 
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
