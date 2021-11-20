@@ -16,10 +16,13 @@ from fastapi import status
 from pony.orm import db_session
 from pony.orm.core import flush
 
-
 def test_createGame_success(client):
     gameName = "Game test"
     hostNickname = "test_host_nickname"
+
+    with db_session:
+        game = Game.get(name=gameName)
+        assert game == None
 
     response = client.post(
         "/games", json={"gameName": gameName, "hostNickname": hostNickname}
@@ -29,7 +32,32 @@ def test_createGame_success(client):
     with db_session:
         game = Game.get(name=gameName)
         player = Player.get(nickname=hostNickname)
+        
+        playerCount = len(game.players)
+        assert playerCount == 1
+        assert game.password == ""
 
+    assert response.json() == {"idPartida": game.id, "idHost": player.id}
+
+def test_createGameWithPassword_success(client):
+    gameName = "Game test"
+    hostNickname = "test_host_nickname"
+    password = "Password"
+
+    with db_session:
+        game = Game.get(name=gameName)
+        assert game == None
+
+    response = client.post(
+        "/games", json={"gameName": gameName, "hostNickname": hostNickname, "password": password}
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    with db_session:
+        game = Game.get(name=gameName)
+        player = Player.get(nickname=hostNickname)
+
+        assert game.password == password
         playerCount = len(game.players)
         assert playerCount == 1
 
@@ -57,8 +85,17 @@ def test_getGames_success(client, dataListGames):
 
     assert response.status_code == 200
     assert response.json() == [
-        {"id": 1, "name": "g1", "playerCount": 1},
-        {"id": 5, "name": "g5", "playerCount": 4},
+        {"id": 1, "name": "g1", "hasPassword": False, "playerCount": 1},
+        {"id": 5, "name": "g5", "hasPassword": False, "playerCount": 4},
+    ]
+
+def test_getGamesWithPassword_success(client, dataPasswordGame):
+
+    response = client.get("/games")
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {"id": 1, "name": "g1", "hasPassword": True, "playerCount": 1},
     ]
 
 
@@ -66,7 +103,7 @@ def test_getGames_game_with_no_players(client, dataGameNoPlayers):
     response = client.get("/games")
 
     assert response.status_code == 200
-    assert response.json() == [{"id": 1, "name": "g1", "playerCount": 0}]
+    assert response.json() == [{"id": 1, "name": "g1", "hasPassword": False, "playerCount": 0}]
 
 
 def test_getGames_no_games(client):

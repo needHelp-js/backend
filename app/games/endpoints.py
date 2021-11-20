@@ -55,9 +55,15 @@ async def getGames():
         gamesList = []
 
         for game in games:
+
             gameDict = game.to_dict(["id", "name"])
             gameDict.update(playerCount=len(game.players))
 
+            if game.password != "":
+                gameDict["hasPassword"] = True
+            else:
+                gameDict["hasPassword"] = False
+            
             gamesList.append(gameDict)
 
         return gamesList
