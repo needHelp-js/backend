@@ -10,11 +10,16 @@ class Room:
         self.name = name
         self.entries = entries
 
+class SpecialCell:
+    def __init__(self, initialPosition: Tuple, transportPosition: Tuple):
+        self.initialPosition = initialPosition
+        self.transportPosition = transportPosition
 
 class BoardManager:
     def __init__(self):
         self._board = [[]]
         self._rooms = []
+        self._specialCells = []
         self._boardTuples = {}
         self._boardId = [[]]
 
@@ -50,11 +55,12 @@ class BoardManager:
         self._board[13][10] = "#"
         self._board[13][16] = "#"
 
+
         room1 = Room(id=1, name=RoomsNames.COCHERA.value, entries=[(2, 6)])
         self._rooms.append(room1)
         room2 = Room(id=2, name=RoomsNames.ALCOBA.value, entries=[(6, 10)])
         self._rooms.append(room2)
-        room3 = Room(id=3, name=RoomsNames.BIBLIOTECA.value, entries=[(4, 6)])
+        room3 = Room(id=3, name=RoomsNames.BIBLIOTECA.value, entries=[(4, 13)])
         self._rooms.append(room3)
         room4 = Room(
             id=4, name=RoomsNames.VESTIBULO.value, entries=[(6, 4), (10, 6), (13, 3)]
@@ -71,6 +77,40 @@ class BoardManager:
         room8 = Room(id=8, name=RoomsNames.LABORATORIO.value, entries=[(16, 13)])
         self._rooms.append(room8)
 
+        """
+        Casillas especiales: [(3, 6) -> (14, 6)]
+                             [(3, 13) -> (14, 13)]
+                             [(13, 4) -> (13, 15)]
+        """ 
+
+        #Casillas Especiales
+        self._board[6][3] = "!"
+        self._board[6][14] = "!"
+        self._board[13][4] = "!"
+        self._board[13][15] = "!"
+        self._board[4][6] = "!"
+        self._board[14][6] = "!"
+        self._board[3][13] = "!"
+        self._board[14][13] = "!"
+        
+        specialCell1 = SpecialCell(initialPosition=(6, 3), transportPosition=(6, 14))
+        self._specialCells.append(specialCell1)
+        specialCell2 = SpecialCell(initialPosition=(6, 14), transportPosition=(6, 3))
+        self._specialCells.append(specialCell2)
+        specialCell3 = SpecialCell(initialPosition=(13, 4), transportPosition=(13, 15))
+        self._specialCells.append(specialCell3)
+        specialCell4 = SpecialCell(initialPosition=(13, 15), transportPosition=(13, 4))
+        self._specialCells.append(specialCell4)
+        specialCell5 = SpecialCell(initialPosition=(4, 6), transportPosition=(14, 6))
+        self._specialCells.append(specialCell5)
+        specialCell6 = SpecialCell(initialPosition=(14, 6), transportPosition=(4, 6))
+        self._specialCells.append(specialCell6)
+        specialCell7 = SpecialCell(initialPosition=(3, 13), transportPosition=(14, 13))
+        self._specialCells.append(specialCell7)
+        specialCell8 = SpecialCell(initialPosition=(14, 13), transportPosition=(3, 13))
+        self._specialCells.append(specialCell8)
+        
+
         i = 0
         for j in range(20):
             for k in range(20):
@@ -83,6 +123,7 @@ class BoardManager:
             for k in range(20):
                 self._boardId[j][k] = i
                 i += 1
+
 
     def getPositionIdFromTuple(self, position: Tuple):
         """Get the ID of a cell in the board from its coordinates x and y
@@ -147,6 +188,14 @@ class BoardManager:
             if (y, x) in r.entries:
                 return r.name
 
+    def detectSpecialCell(self, y: int, x: int):
+
+        for c in self._specialCells:
+            if (y, x) == c.initialPosition:
+                return c.transportPosition[0], c.transportPosition[1]    
+    
+        return None
+
     def moveLeft(self, y, x, moves, availablePositions, availableRooms):
         """Detects all the cells and rooms which are available to the left of the player.
 
@@ -163,6 +212,13 @@ class BoardManager:
         while remainingMoves >= 0 and x_AxisPosition >= 0:
 
             availablePositions.append((y_AxisPosition, x_AxisPosition))
+
+            if self._board[y_AxisPosition][x_AxisPosition] == "!":
+                if remainingMoves >= 1:
+                    aux_Y, aux_X = self.detectSpecialCell(y_AxisPosition, x_AxisPosition)
+                    availablePositions.append((aux_Y, aux_X))
+                    self.moveLeft(aux_Y, aux_X, remainingMoves-1, availablePositions, availableRooms)
+                    self.moveRight(aux_Y, aux_X, remainingMoves-1, availablePositions, availableRooms)
 
             if self._board[y_AxisPosition + 1][x_AxisPosition] != "*":
                 aux_remainingMoves = remainingMoves
@@ -212,6 +268,13 @@ class BoardManager:
 
             availablePositions.append((y_AxisPosition, x_AxisPosition))
 
+            if self._board[y_AxisPosition][x_AxisPosition] == "!":
+                if remainingMoves >= 1:
+                    aux_Y, aux_X = self.detectSpecialCell(y_AxisPosition, x_AxisPosition)
+                    availablePositions.append((aux_Y, aux_X))
+                    self.moveLeft(aux_Y, aux_X, remainingMoves-1, availablePositions, availableRooms)
+                    self.moveRight(aux_Y, aux_X, remainingMoves-1, availablePositions, availableRooms)
+
             if self._board[y_AxisPosition + 1][x_AxisPosition] != "*":
                 aux_remainingMoves = remainingMoves
                 aux_yAxis = y_AxisPosition
@@ -260,6 +323,13 @@ class BoardManager:
 
             availablePositions.append((y_AxisPosition, x_AxisPosition))
 
+            if self._board[y_AxisPosition][x_AxisPosition] == "!":
+                if remainingMoves >= 1:
+                    aux_Y, aux_X = self.detectSpecialCell(y_AxisPosition, x_AxisPosition)
+                    availablePositions.append((aux_Y, aux_X))
+                    self.moveUp(aux_Y, aux_X, remainingMoves-1, availablePositions, availableRooms)
+                    self.moveDown(aux_Y, aux_X, remainingMoves-1, availablePositions, availableRooms)
+
             if self._board[y_AxisPosition][x_AxisPosition + 1] != "*":
                 aux_remainingMoves = remainingMoves
                 aux_yAxis = y_AxisPosition
@@ -307,6 +377,13 @@ class BoardManager:
         while remainingMoves >= 0 and y_AxisPosition <= 19:
 
             availablePositions.append((y_AxisPosition, x_AxisPosition))
+
+            if self._board[y_AxisPosition][x_AxisPosition] == "!":
+                if remainingMoves >= 1:
+                    aux_Y, aux_X = self.detectSpecialCell(y_AxisPosition, x_AxisPosition)
+                    availablePositions.append((aux_Y, aux_X))
+                    self.moveUp(aux_Y, aux_X, remainingMoves-1, availablePositions, availableRooms)
+                    self.moveDown(aux_Y, aux_X, remainingMoves-1, availablePositions, availableRooms)
 
             if self._board[y_AxisPosition][x_AxisPosition + 1] != "*":
                 aux_remainingMoves = remainingMoves
@@ -360,10 +437,26 @@ class BoardManager:
             availableRooms.append(room)
 
         if x == 6 or x == 13:
+            #Calculo las posiciones disponibles en caso de teletransportarte
+            if diceNumber >= 1 and self._board[y][x] == "!":
+                aux_Y, aux_X = self.detectSpecialCell(y, x)
+                availablePositions.append((aux_Y, aux_X))
+                self.moveUp(aux_Y, aux_X, diceNumber-1, availablePositions, availableRooms)
+                self.moveDown(aux_Y, aux_X, diceNumber-1, availablePositions, availableRooms)
+            
+            #Calculo las posiciones disponibles desde la posición actual (sin teletransportación)
             self.moveUp(y, x, diceNumber, availablePositions, availableRooms)
             self.moveDown(y, x, diceNumber, availablePositions, availableRooms)
 
         if y == 6 or y == 13:
+            #Calculo las posiciones disponibles en caso de teletransportarte
+            if diceNumber >= 1 and self._board[y][x] == "!":
+                aux_Y, aux_X = self.detectSpecialCell(y, x)
+                availablePositions.append((aux_Y, aux_X))
+                self.moveLeft(aux_Y, aux_X, diceNumber-1, availablePositions, availableRooms)
+                self.moveRight(aux_Y, aux_X, diceNumber-1, availablePositions, availableRooms)
+            
+            #Calculo las posiciones disponibles desde la posición actual (sin teletransportación)
             self.moveLeft(y, x, diceNumber, availablePositions, availableRooms)
             self.moveRight(y, x, diceNumber, availablePositions, availableRooms)
 
