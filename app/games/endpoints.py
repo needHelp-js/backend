@@ -2,8 +2,6 @@ from os import stat
 from random import randint
 from typing import List, Tuple
 
-from starlette.status import HTTP_204_NO_CONTENT
-
 from app.enums import CardType
 from app.games.boardManager import BoardManager
 from app.games.connections import GameConnectionManager
@@ -26,6 +24,7 @@ from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import commit, db_session
 from pony.orm.core import flush
+from starlette.status import HTTP_204_NO_CONTENT
 from starlette.websockets import WebSocketDisconnect
 
 router = APIRouter(prefix="/games")
@@ -469,7 +468,7 @@ async def replySuspect(
 async def end_turn(gameId: int, playerId: int, response: Response):
     with db_session:
         game = Game[gameId]
-        
+
         response.status_code = status.HTTP_204_NO_CONTENT
 
         game.incrementTurn()
@@ -478,7 +477,13 @@ async def end_turn(gameId: int, playerId: int, response: Response):
         ).first()
         await manager.broadcastToGame(
             gameId,
-            {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id, "playerNickname": currentPlayer.nickname}},
+            {
+                "type": TURN_ENDED_EVENT,
+                "payload": {
+                    "playerId": currentPlayer.id,
+                    "playerNickname": currentPlayer.nickname,
+                },
+            },
         )
 
 
