@@ -1,9 +1,13 @@
 from app.enums import MonstersNames, RoomsNames, VictimsNames
+from app.games.boardManager import Room
 from app.games.endpoints import availablePositions, manager
 from app.games.events import (
     BEGIN_GAME_EVENT,
     DEAL_CARDS_EVENT,
+    GAME_ENDED_EVENT,
+    PLAYER_ACCUSED_EVENT,
     PLAYER_JOINED_EVENT,
+    PLAYER_LOST_EVENT,
     PLAYER_REPLIED_EVENT,
     SUSPICION_FAILED_EVENT,
     SUSPICION_MADE_EVENT,
@@ -14,7 +18,7 @@ from app.games.events import (
 from app.models import Game, Player
 from fastapi import status
 from pony.orm import db_session
-from pony.orm.core import flush
+from pony.orm.core import commit, flush
 
 
 def test_createGame_success(client):
@@ -392,6 +396,8 @@ def test_getGameDetails_success(client, dataListGames):
         "name": "g1",
         "started": False,
         "currentTurn": 0,
+        "ended": False,
+        "winnerNickname": "",
         "players": [
             {
                 "id": 0,
@@ -400,6 +406,7 @@ def test_getGameDetails_success(client, dataListGames):
                 "isSuspecting": False,
                 "position": None,
                 "room": None,
+                "hasLost": False,
             }
         ],
         "host": {
@@ -409,6 +416,7 @@ def test_getGameDetails_success(client, dataListGames):
             "isSuspecting": False,
             "position": None,
             "room": None,
+            "hasLost": False,
         },
     }
 
@@ -426,6 +434,8 @@ def test_getGameDetails_startedGame(client, dataListGames):
         "name": "g1",
         "started": True,
         "currentTurn": 1,
+        "ended": False,
+        "winnerNickname": "",
         "players": [
             {
                 "id": 0,
@@ -434,6 +444,7 @@ def test_getGameDetails_startedGame(client, dataListGames):
                 "isSuspecting": False,
                 "position": [0, 6],
                 "room": None,
+                "hasLost": False,
             }
         ],
         "host": {
@@ -443,6 +454,7 @@ def test_getGameDetails_startedGame(client, dataListGames):
             "isSuspecting": False,
             "position": [0, 6],
             "room": None,
+            "hasLost": False,
         },
     }
 
@@ -456,6 +468,8 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
         "name": "g1",
         "started": False,
         "currentTurn": 1,
+        "ended": False,
+        "winnerNickname": "",
         "players": [
             {
                 "id": 1,
@@ -464,6 +478,7 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
                 "position": None,
                 "room": None,
                 "isSuspecting": False,
+                "hasLost": False,
             },
             {
                 "id": 2,
@@ -472,6 +487,7 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
                 "position": None,
                 "room": None,
                 "isSuspecting": False,
+                "hasLost": False,
             },
         ],
         "host": {
@@ -481,6 +497,7 @@ def test_getGameDetails_multiplePlayers(client, dataTirarDado):
             "isSuspecting": False,
             "position": None,
             "room": None,
+            "hasLost": False,
         },
     }
 
@@ -858,3 +875,208 @@ def test_replySuspect_repliedIsNotSuspecting(client, dataSuspect):
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json() == {"Error": f"El jugador 1 no está sospechando."}
+
+
+def test_accuse_success(client, dataAccuse):
+
+    manager.createGameConnection(1)
+
+    mayordomo = VictimsNames.MAYORDOMO.value
+    hombre_lobo = MonstersNames.HOMBRE_LOBO.value
+    panteon = RoomsNames.PANTEON.value
+    with db_session:
+        game = Game[1]
+        player = Player[1]
+        assert not game.ended
+        assert game.winnerNickname == ""
+
+    with client.websocket_connect(
+        "/games/1/ws/1"
+    ) as websocket1, client.websocket_connect(
+        "/games/1/ws/2"
+    ) as websocket2, client.websocket_connect(
+        "/games/1/ws/3"
+    ) as websocket3:
+
+        response = client.post(
+            "/games/1/accuse/1",
+            json={
+                "victimCardName": mayordomo,
+                "monsterCardName": hombre_lobo,
+                "roomCardName": panteon,
+            },
+        )
+
+        assert response.status_code == 204
+
+        ans = websocket1.receive_json()  # PLAYER ACCUSED
+        assert ans["type"] == PLAYER_ACCUSED_EVENT
+        assert ans["payload"] == {
+            "playerId": 1,
+            "playerNickname": "p1",
+            "victimCardName": mayordomo,
+            "monsterCardName": hombre_lobo,
+            "roomCardName": panteon,
+        }
+
+        ans = websocket2.receive_json()  # PLAYER ACCUSED
+        ans = websocket3.receive_json()  # PLAYER ACCUSED
+
+        ans = websocket1.receive_json()  # GAME ENDED
+        assert ans["type"] == GAME_ENDED_EVENT
+        assert ans["payload"] == {
+            "winnerNickname": "p1",
+            "cardsInEnvelope": [
+                {"name": "Hombre Lobo", "type": "monstruo"},
+                {"name": "Panteon", "type": "recinto"},
+                {"name": "Mayordomo", "type": "victima"},
+            ],
+        }
+
+        ans = websocket2.receive_json()  # GAME ENDED
+        ans = websocket3.receive_json()  # GAME ENDED
+
+        with db_session:
+            game = Game[1]
+            assert game.ended
+            assert game.winnerNickname == "p1"
+
+
+def test_accuse_cardsNotInEnvelope(client, dataAccuse):
+
+    manager.createGameConnection(1)
+
+    conde = VictimsNames.CONDE.value
+    hombre_lobo = MonstersNames.HOMBRE_LOBO.value
+    panteon = RoomsNames.PANTEON.value
+
+    with db_session:
+        game = Game[1]
+        player = Player[1]
+        assert not player.hasLost
+
+    with client.websocket_connect(
+        "/games/1/ws/1"
+    ) as websocket1, client.websocket_connect(
+        "/games/1/ws/2"
+    ) as websocket2, client.websocket_connect(
+        "/games/1/ws/3"
+    ) as websocket3:
+
+        response = client.post(
+            "/games/1/accuse/1",
+            json={
+                "victimCardName": conde,
+                "monsterCardName": hombre_lobo,
+                "roomCardName": panteon,
+            },
+        )
+
+        assert response.status_code == 204
+
+        ans = websocket1.receive_json()  # PLAYER ACCUSED
+        ans = websocket2.receive_json()  # PLAYER ACCUSED
+        ans = websocket3.receive_json()  # PLAYER ACCUSED
+
+        ans = websocket1.receive_json()  # PLAYER LOST
+        assert ans["type"] == PLAYER_LOST_EVENT
+        assert ans["payload"] == {"playerId": 1, "playerNickname": "p1"}
+
+        ans = websocket2.receive_json()  # PLAYER LOST
+        ans = websocket3.receive_json()  # PLAYER LOST
+
+        with db_session:
+            game = Game[1]
+            player = Player[1]
+            assert not game.ended
+            assert player.hasLost
+            assert player.room == None
+            assert player.position == None
+
+            assert game.currentPlayer != player
+
+
+def test_accuse_cardsNotInEnvelopeAndGameEnds(client, dataAccuse):
+    manager.createGameConnection(1)
+
+    conde = VictimsNames.CONDE.value
+    hombre_lobo = MonstersNames.HOMBRE_LOBO.value
+    panteon = RoomsNames.PANTEON.value
+
+    with db_session:
+        game = Game[1]
+        player = Player[1]
+        assert not player.hasLost
+        player2 = Player[2]
+        player2.looseGame()
+
+    with client.websocket_connect(
+        "/games/1/ws/1"
+    ) as websocket1, client.websocket_connect(
+        "/games/1/ws/2"
+    ) as websocket2, client.websocket_connect(
+        "/games/1/ws/3"
+    ) as websocket3:
+
+        response = client.post(
+            "/games/1/accuse/1",
+            json={
+                "victimCardName": conde,
+                "monsterCardName": hombre_lobo,
+                "roomCardName": panteon,
+            },
+        )
+
+        assert response.status_code == 204
+
+        ans = websocket1.receive_json()  # PLAYER ACCUSED
+        ans = websocket2.receive_json()  # PLAYER ACCUSED
+        ans = websocket3.receive_json()  # PLAYER ACCUSED
+
+        ans = websocket1.receive_json()  # PLAYER LOST
+        ans = websocket2.receive_json()  # PLAYER LOST
+        ans = websocket3.receive_json()  # PLAYER LOST
+
+        ans = websocket1.receive_json()  # GAME ENDED
+        assert ans["type"] == GAME_ENDED_EVENT
+        assert ans["payload"] == {
+            "winnerNickname": "p3",
+            "cardsInEnvelope": [
+                {"name": "Hombre Lobo", "type": "monstruo"},
+                {"name": "Panteon", "type": "recinto"},
+                {"name": "Mayordomo", "type": "victima"},
+            ],
+        }
+
+        ans = websocket2.receive_json()  # GAME ENDED
+        ans = websocket3.receive_json()  # GAME ENDED
+
+        with db_session:
+            game = Game[1]
+            player = Player[1]
+            assert game.ended
+            assert player.hasLost
+            assert player.room == None
+            assert player.position == None
+
+            assert game.currentPlayer != player
+
+
+def test_accuse_cardNoValid(client, dataAccuse):
+    manager.createGameConnection(1)
+
+    response = client.post(
+        "/games/1/accuse/1",
+        json={
+            "victimCardName": "Gato",
+            "monsterCardName": MonstersNames.HOMBRE_LOBO.value,
+            "roomCardName": RoomsNames.PANTEON.value,
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "Error": "Error de validacion de datos",
+        "loc": ["body", "victimCardName"],
+        "msg": "value is not a valid enumeration member; permitted: 'Conde', 'Condesa', 'Ama de llaves', 'Mayordomo', 'Doncella', 'Jardinero'",
+    }
