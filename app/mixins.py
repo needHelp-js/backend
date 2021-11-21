@@ -22,7 +22,9 @@ class GameMixin(object):
             self.incrementTurn()
 
     def currentPlayer(self):
-        return self.players.get(lambda p: p.turnOrder == self.currentTurn)
+        return self.players.filter(
+                lambda player: player.turnOrder == self.currentTurn
+            ).first()
 
     def setPlayersTurnOrder(self):
         turnToAssign = 1
@@ -114,12 +116,24 @@ class GameMixin(object):
             players[i % len(players)].cards.add(card_set.pop())
             i += 1
 
+    def finishGame(self, winnerNickname: str):
+        self.ended = True
+        self.winnerNickname = winnerNickname
+
+    def isFinished(self):
+        playersPlaying = self.players.filter(lambda p: not p.hasLost)[:]
+
+        if len(playersPlaying) <= 1:
+            self.finishGame(winnerNickname=playersPlaying[0].nickname)
+        
+        return self.ended    
+
 
 class PlayerMixin:
     def filterCards(self, cardNames: List[str]):
         return self.cards.filter(lambda card: card.name in cardNames)
 
-    def setLost(self):
+    def looseGame(self):
         self.hasLost = True
         self.position = None
         self.room = None

@@ -14,7 +14,8 @@ class Game(db.Entity, GameMixin):
     players = Set("Player", reverse="currentGame")
     host = Required("Player", reverse="hostedGame")
     cards = Set("Card")
-    ended = Required(bool, required=False)
+    ended = Required(bool, default=False)
+    winnerNickname = Optional(str)
 
 
 class Player(db.Entity, PlayerMixin):
