@@ -1,12 +1,20 @@
 from app.enums import MonstersNames, RoomsNames, VictimsNames
 from app.games.boardManager import Room
 from app.games.endpoints import availablePositions, manager
-from app.games.events import (BEGIN_GAME_EVENT, DEAL_CARDS_EVENT,
-                              GAME_ENDED_EVENT, PLAYER_ACCUSED_EVENT,
-                              PLAYER_JOINED_EVENT, PLAYER_LOST_EVENT,
-                              PLAYER_REPLIED_EVENT, SUSPICION_FAILED_EVENT,
-                              SUSPICION_MADE_EVENT, SUSPICION_RESPONSE_EVENT,
-                              TURN_ENDED_EVENT, YOU_ARE_SUSPICIOUS_EVENT)
+from app.games.events import (
+    BEGIN_GAME_EVENT,
+    DEAL_CARDS_EVENT,
+    GAME_ENDED_EVENT,
+    PLAYER_ACCUSED_EVENT,
+    PLAYER_JOINED_EVENT,
+    PLAYER_LOST_EVENT,
+    PLAYER_REPLIED_EVENT,
+    SUSPICION_FAILED_EVENT,
+    SUSPICION_MADE_EVENT,
+    SUSPICION_RESPONSE_EVENT,
+    TURN_ENDED_EVENT,
+    YOU_ARE_SUSPICIOUS_EVENT,
+)
 from app.models import Game, Player
 from fastapi import status
 from pony.orm import db_session
@@ -916,7 +924,14 @@ def test_accuse_success(client, dataAccuse):
 
         ans = websocket1.receive_json()  # GAME ENDED
         assert ans["type"] == GAME_ENDED_EVENT
-        assert ans["payload"] == {"winnerNickname": "p1"}
+        assert ans["payload"] == {
+            "winnerNickname": "p1",
+            "cardsInEnvelope": [
+                {"name": "Hombre Lobo", "type": "monstruo"},
+                {"name": "Panteon", "type": "recinto"},
+                {"name": "Mayordomo", "type": "victima"},
+            ],
+        }
 
         ans = websocket2.receive_json()  # GAME ENDED
         ans = websocket3.receive_json()  # GAME ENDED
@@ -1024,7 +1039,14 @@ def test_accuse_cardsNotInEnvelopeAndGameEnds(client, dataAccuse):
 
         ans = websocket1.receive_json()  # GAME ENDED
         assert ans["type"] == GAME_ENDED_EVENT
-        assert ans["payload"] == {"winnerNickname": "p3"}
+        assert ans["payload"] == {
+            "winnerNickname": "p3",
+            "cardsInEnvelope": [
+                {"name": "Hombre Lobo", "type": "monstruo"},
+                {"name": "Panteon", "type": "recinto"},
+                {"name": "Mayordomo", "type": "victima"},
+            ],
+        }
 
         ans = websocket2.receive_json()  # GAME ENDED
         ans = websocket3.receive_json()  # GAME ENDED
