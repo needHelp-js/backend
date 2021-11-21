@@ -1,24 +1,16 @@
 from app.enums import MonstersNames, RoomsNames, VictimsNames
 from app.games.boardManager import Room
 from app.games.endpoints import availablePositions, manager
-from app.games.events import (
-    BEGIN_GAME_EVENT,
-    DEAL_CARDS_EVENT,
-    GAME_ENDED_EVENT,
-    PLAYER_ACCUSED_EVENT,
-    PLAYER_JOINED_EVENT,
-    PLAYER_LOST_EVENT,
-    SUSPICION_FAILED_EVENT,
-    SUSPICION_MADE_EVENT,
-    SUSPICION_RESPONSE_EVENT,
-    TURN_ENDED_EVENT,
-    YOU_ARE_SUSPICIOUS_EVENT,
-)
+from app.games.events import (BEGIN_GAME_EVENT, DEAL_CARDS_EVENT,
+                              GAME_ENDED_EVENT, PLAYER_ACCUSED_EVENT,
+                              PLAYER_JOINED_EVENT, PLAYER_LOST_EVENT,
+                              SUSPICION_FAILED_EVENT, SUSPICION_MADE_EVENT,
+                              SUSPICION_RESPONSE_EVENT, TURN_ENDED_EVENT,
+                              YOU_ARE_SUSPICIOUS_EVENT)
 from app.models import Game, Player
 from fastapi import status
 from pony.orm import db_session
-from pony.orm.core import flush, commit
-
+from pony.orm.core import commit, flush
 
 
 def test_createGame_success(client):
@@ -781,8 +773,6 @@ def test_accuse_success(client, dataAccuse):
         "/games/1/ws/3"
     ) as websocket3:
 
-        
-        
         response = client.post(
             "/games/1/accuse/1",
             json={
@@ -809,9 +799,7 @@ def test_accuse_success(client, dataAccuse):
 
         ans = websocket1.receive_json()  # GAME ENDED
         assert ans["type"] == GAME_ENDED_EVENT
-        assert ans["payload"] == {
-            "winnerNickname": "p1"
-        }
+        assert ans["payload"] == {"winnerNickname": "p1"}
 
         ans = websocket2.receive_json()  # GAME ENDED
         ans = websocket3.receive_json()  # GAME ENDED
@@ -822,7 +810,7 @@ def test_accuse_success(client, dataAccuse):
             assert game.winnerNickname == "p1"
 
 
-def test_accuse_wrongCards(client, dataAccuse):
+def test_accuse_cardsNotInEnvelope(client, dataAccuse):
 
     manager.createGameConnection(1)
 
@@ -843,7 +831,6 @@ def test_accuse_wrongCards(client, dataAccuse):
         "/games/1/ws/3"
     ) as websocket3:
 
-
         response = client.post(
             "/games/1/accuse/1",
             json={
@@ -858,18 +845,14 @@ def test_accuse_wrongCards(client, dataAccuse):
         ans = websocket1.receive_json()  # PLAYER ACCUSED
         ans = websocket2.receive_json()  # PLAYER ACCUSED
         ans = websocket3.receive_json()  # PLAYER ACCUSED
-       
 
         ans = websocket1.receive_json()  # PLAYER LOST
         assert ans["type"] == PLAYER_LOST_EVENT
-        assert ans["payload"] == {
-            "playerId": 1,
-            "playerNickname": "p1"
-        }
+        assert ans["payload"] == {"playerId": 1, "playerNickname": "p1"}
 
         ans = websocket2.receive_json()  # PLAYER LOST
         ans = websocket3.receive_json()  # PLAYER LOST
-        
+
         with db_session:
             game = Game[1]
             player = Player[1]
@@ -881,7 +864,7 @@ def test_accuse_wrongCards(client, dataAccuse):
             assert game.currentPlayer != player
 
 
-def test_accuse_wrongCardsAndGameEnded(client, dataAccuse):
+def test_accuse_cardsNotInEnvelopeAndGameEnds(client, dataAccuse):
     manager.createGameConnection(1)
 
     conde = VictimsNames.CONDE.value
@@ -903,7 +886,6 @@ def test_accuse_wrongCardsAndGameEnded(client, dataAccuse):
         "/games/1/ws/3"
     ) as websocket3:
 
-
         response = client.post(
             "/games/1/accuse/1",
             json={
@@ -918,8 +900,6 @@ def test_accuse_wrongCardsAndGameEnded(client, dataAccuse):
         ans = websocket1.receive_json()  # PLAYER ACCUSED
         ans = websocket2.receive_json()  # PLAYER ACCUSED
         ans = websocket3.receive_json()  # PLAYER ACCUSED
-       
-
 
         ans = websocket1.receive_json()  # PLAYER LOST
         ans = websocket2.receive_json()  # PLAYER LOST
@@ -927,13 +907,11 @@ def test_accuse_wrongCardsAndGameEnded(client, dataAccuse):
 
         ans = websocket1.receive_json()  # GAME ENDED
         assert ans["type"] == GAME_ENDED_EVENT
-        assert ans["payload"] == {
-            "winnerNickname": "p3"
-        }
+        assert ans["payload"] == {"winnerNickname": "p3"}
 
         ans = websocket2.receive_json()  # GAME ENDED
         ans = websocket3.receive_json()  # GAME ENDED
-        
+
         with db_session:
             game = Game[1]
             player = Player[1]
@@ -943,3 +921,23 @@ def test_accuse_wrongCardsAndGameEnded(client, dataAccuse):
             assert player.position == None
 
             assert game.currentPlayer != player
+
+
+def test_accuse_cardNoValid(client, dataAccuse):
+    manager.createGameConnection(1)
+
+    response = client.post(
+        "/games/1/accuse/1",
+        json={
+            "victimCardName": "Gato",
+            "monsterCardName": MonstersNames.HOMBRE_LOBO.value,
+            "roomCardName": RoomsNames.PANTEON.value,
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "Error": "Error de validacion de datos",
+        "loc": ["body", "victimCardName"],
+        "msg": "value is not a valid enumeration member; permitted: 'Conde', 'Condesa', 'Ama de llaves', 'Mayordomo', 'Doncella', 'Jardinero'",
+    }

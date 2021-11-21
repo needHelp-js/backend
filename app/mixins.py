@@ -23,8 +23,8 @@ class GameMixin(object):
 
     def currentPlayer(self):
         return self.players.filter(
-                lambda player: player.turnOrder == self.currentTurn
-            ).first()
+            lambda player: player.turnOrder == self.currentTurn
+        ).first()
 
     def setPlayersTurnOrder(self):
         turnToAssign = 1
@@ -125,8 +125,8 @@ class GameMixin(object):
 
         if len(playersPlaying) <= 1:
             self.finishGame(winnerNickname=playersPlaying[0].nickname)
-        
-        return self.ended    
+
+        return self.ended
 
 
 class PlayerMixin:

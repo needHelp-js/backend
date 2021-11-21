@@ -6,36 +6,19 @@ from app.enums import CardType
 from app.games.boardManager import BoardManager
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
-from app.games.events import (
-    BEGIN_GAME_EVENT,
-    DEAL_CARDS_EVENT,
-    DICE_ROLL_EVENT,
-    ENTER_ROOM_EVENT,
-    GAME_ENDED_EVENT,
-    MOVE_PLAYER_EVENT,
-    PLAYER_ACCUSED_EVENT,
-    PLAYER_JOINED_EVENT,
-    PLAYER_LOST_EVENT,
-    SUSPICION_FAILED_EVENT,
-    SUSPICION_MADE_EVENT,
-    SUSPICION_RESPONSE_EVENT,
-    TURN_ENDED_EVENT,
-    YOU_ARE_SUSPICIOUS_EVENT,
-)
-from app.games.exceptions import (
-    GameConnectionDoesNotExist,
-    PlayerAlreadyConnected,
-    PlayerNotConnected,
-)
-from app.games.schemas import (
-    AccuseSchema,
-    AvailableGameSchema,
-    CreateGameSchema,
-    MovePlayerSchema,
-    ReplySuspectSchema,
-    SuspectSchema,
-    joinGameSchema,
-)
+from app.games.events import (BEGIN_GAME_EVENT, DEAL_CARDS_EVENT,
+                              DICE_ROLL_EVENT, ENTER_ROOM_EVENT,
+                              GAME_ENDED_EVENT, MOVE_PLAYER_EVENT,
+                              PLAYER_ACCUSED_EVENT, PLAYER_JOINED_EVENT,
+                              PLAYER_LOST_EVENT, SUSPICION_FAILED_EVENT,
+                              SUSPICION_MADE_EVENT, SUSPICION_RESPONSE_EVENT,
+                              TURN_ENDED_EVENT, YOU_ARE_SUSPICIOUS_EVENT)
+from app.games.exceptions import (GameConnectionDoesNotExist,
+                                  PlayerAlreadyConnected, PlayerNotConnected)
+from app.games.schemas import (AccuseSchema, AvailableGameSchema,
+                               CreateGameSchema, MovePlayerSchema,
+                               ReplySuspectSchema, SuspectSchema,
+                               joinGameSchema)
 from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import commit, db_session
@@ -493,7 +476,6 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
         roomCard = Card.get(
             lambda c: c.game.id == gameId and c.name == roomCardName.value
         )
-        # TODO: Preguntarle al front lo del error de las cartas que no existen
 
         await manager.broadcastToGame(
             gameId,

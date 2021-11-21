@@ -1,6 +1,6 @@
-from pony.orm import db_session
 from app.enums import MonstersNames, RoomsNames, VictimsNames
 from app.models import Card, Game, Player
+from pony.orm import db_session
 
 
 def test_startGame(app, beginGameData):
@@ -24,6 +24,7 @@ def test_incrementTurn(app, dataTirarDado):
         g1.incrementTurn()
         assert g1.currentTurn == 2
 
+
 def test_currentPlayer_success(client, dataCards):
     with db_session:
         game = Game[1]
@@ -33,6 +34,7 @@ def test_currentPlayer_success(client, dataCards):
 
         assert cPlayer == player
 
+
 def test_currentPlayer_noPlayersInGame(client, dataGameNoPlayers):
     with db_session:
         game = Game[1]
@@ -40,6 +42,7 @@ def test_currentPlayer_noPlayersInGame(client, dataGameNoPlayers):
         cPlayer = game.currentPlayer()
 
         assert cPlayer is None
+
 
 def test_setPlayerTurnOrder_success(app, data):
     with db_session:
@@ -181,7 +184,7 @@ def test_findPlayerIdWithCards_fromFirstPlayer(app, dataSuspect):
 def test_finishGame_success(app, dataGameNoPlayers):
     with db_session:
         game = Game[1]
-        
+
         assert not game.ended
         assert game.winnerNickname == ""
 
@@ -189,6 +192,7 @@ def test_finishGame_success(app, dataGameNoPlayers):
 
         assert game.ended
         assert game.winnerNickname == "Nickname"
+
 
 def test_isFinished_gameNotEnded(app, data):
     with db_session:
@@ -204,6 +208,7 @@ def test_isFinished_gameAlreadyEnded(app, data):
         assert game.ended
         assert game.isFinished()
 
+
 def test_isFinished_gameWithOnePlayerActive(app, dataTirarDado):
     with db_session:
         game = Game[1]
@@ -211,6 +216,7 @@ def test_isFinished_gameWithOnePlayerActive(app, dataTirarDado):
         assert not game.ended
         player.looseGame()
         assert game.isFinished()
+
 
 def test_looseGame(app, dataTirarDado):
     with db_session:
