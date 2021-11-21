@@ -24,6 +24,7 @@ def test_incrementTurn_success(app, dataTirarDado):
         g1.incrementTurn()
         assert g1.currentTurn == 2
 
+
 def test_incrementTurn_onePlayerLost(app, dataSuspect):
     # We'll use game 1 with players 1,2,3 and 4. CurrentTurn = 1
     with db_session:
@@ -35,6 +36,7 @@ def test_incrementTurn_onePlayerLost(app, dataSuspect):
 
         g1.incrementTurn()
         assert g1.currentTurn == 3
+
 
 def test_incrementTurn_twoPlayersLost(app, dataSuspect):
     # We'll use game 1 with players 1,2,3 and 4. CurrentTurn = 1
@@ -50,6 +52,7 @@ def test_incrementTurn_twoPlayersLost(app, dataSuspect):
         g1.incrementTurn()
         g1.incrementTurn()
         assert g1.currentTurn == 1
+
 
 def test_currentPlayer_success(client, dataCards):
     with db_session:

@@ -546,7 +546,12 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
                 gameId,
                 {
                     "type": GAME_ENDED_EVENT,
-                    "payload": {"winnerNickname": game.winnerNickname, "cardsInEnvelope": [c.to_dict(["type", "name"]) for c in cardsInEnvelope]},
+                    "payload": {
+                        "winnerNickname": game.winnerNickname,
+                        "cardsInEnvelope": [
+                            c.to_dict(["type", "name"]) for c in cardsInEnvelope
+                        ],
+                    },
                 },
             )
         else:
