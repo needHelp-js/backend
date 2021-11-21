@@ -7,16 +7,19 @@ from pydantic import BaseModel
 class AvailableGameSchema(BaseModel):
     id: int
     name: str
+    hasPassword: bool
     playerCount: int
 
 
 class CreateGameSchema(BaseModel):
     gameName: str
     hostNickname: str
+    password: str = ""
 
 
 class joinGameSchema(BaseModel):
     playerNickname: str
+    password: str = ""
 
 
 class MovePlayerSchema(BaseModel):

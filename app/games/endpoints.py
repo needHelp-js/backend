@@ -10,9 +10,10 @@ from app.games.events import (BEGIN_GAME_EVENT, DEAL_CARDS_EVENT,
                               DICE_ROLL_EVENT, ENTER_ROOM_EVENT,
                               GAME_ENDED_EVENT, MOVE_PLAYER_EVENT,
                               PLAYER_ACCUSED_EVENT, PLAYER_JOINED_EVENT,
-                              PLAYER_LOST_EVENT, SUSPICION_FAILED_EVENT,
-                              SUSPICION_MADE_EVENT, SUSPICION_RESPONSE_EVENT,
-                              TURN_ENDED_EVENT, YOU_ARE_SUSPICIOUS_EVENT)
+                              PLAYER_LOST_EVENT, PLAYER_REPLIED_EVENT,
+                              SUSPICION_FAILED_EVENT, SUSPICION_MADE_EVENT,
+                              SUSPICION_RESPONSE_EVENT, TURN_ENDED_EVENT,
+                              YOU_ARE_SUSPICIOUS_EVENT)
 from app.games.exceptions import (GameConnectionDoesNotExist,
                                   PlayerAlreadyConnected, PlayerNotConnected)
 from app.games.schemas import (AccuseSchema, AvailableGameSchema,
@@ -38,7 +39,11 @@ def createGame(gameCreationData: CreateGameSchema, response: Response):
             return {"Error": f"Partida {gameCreationData.gameName} ya existe"}
 
         hostPlayer = Player(nickname=gameCreationData.hostNickname)
-        newGame = Game(name=gameCreationData.gameName, host=hostPlayer)
+        newGame = Game(
+            name=gameCreationData.gameName,
+            host=hostPlayer,
+            password=gameCreationData.password,
+        )
 
         flush()
 
@@ -57,8 +62,14 @@ async def getGames():
         gamesList = []
 
         for game in games:
+
             gameDict = game.to_dict(["id", "name"])
             gameDict.update(playerCount=len(game.players))
+
+            if game.password != "":
+                gameDict["hasPassword"] = True
+            else:
+                gameDict["hasPassword"] = False
 
             gamesList.append(gameDict)
 
@@ -159,6 +170,14 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
         if game.countPlayers() == 6:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": f"La partida {gameId} ya esta llena."}
+
+        if game.password != joinGameData.password:
+            if game.password == "":
+                response.status_code = status.HTTP_403_FORBIDDEN
+                return {"Error": "Esta partida no tiene contraseña"}
+            if game.password != "":
+                response.status_code = status.HTTP_403_FORBIDDEN
+                return {"Error": "Contraseña incorrecta"}
 
         player = Player(nickname=joinGameData.playerNickname)
 
@@ -276,7 +295,7 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
         game = Game.get(id=gameId)
 
         dict = game.to_dict(
-            related_objects=True, with_collections=True, exclude="cards"
+            related_objects=True, with_collections=True, exclude=["cards", "password"]
         )
         excluded_fields = ["hostedGame", "currentGame"]
 
@@ -354,13 +373,12 @@ async def suspect(
 
         if responseInfo is None:
             player.isSuspecting = False
-            await manager.sendToPlayer(
+            await manager.broadcastToGame(
                 gameId,
-                playerId,
                 {
                     "type": SUSPICION_FAILED_EVENT,
                     "payload": {
-                        "Error": "No hay jugadores que posean alguna de las cartas que sospechaste"
+                        "Error": "No hay jugadores que posean alguna de las cartas de la sospecha."
                     },
                 },
             )
@@ -441,6 +459,14 @@ async def replySuspect(
             {
                 "type": SUSPICION_RESPONSE_EVENT,
                 "payload": {"playerId": playerId, "cardName": schema.cardName},
+            },
+        )
+
+        await manager.broadcastToGame(
+            gameId,
+            {
+                "type": PLAYER_REPLIED_EVENT,
+                "payload": {"playerId": playerId},
             },
         )
 

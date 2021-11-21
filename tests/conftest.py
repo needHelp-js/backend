@@ -38,6 +38,19 @@ def client(app):
 
 
 @pytest.fixture
+def dataPasswordGame():
+    with db_session:
+        p1 = Player(id=1, nickname="p1")
+        g1 = Game(id=1, name="g1", host=p1, password="1234")
+        p2 = Player(id=2, nickname="p2")
+        g2 = Game(id=2, name="g2", host=p2)
+        flush()
+
+        g1.players.add(p1)
+        g2.players.add(p2)
+
+
+@pytest.fixture
 def dataListGames():
     with db_session:
         players = []

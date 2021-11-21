@@ -16,6 +16,7 @@ class Game(db.Entity, GameMixin):
     cards = Set("Card")
     ended = Required(bool, default=False)
     winnerNickname = Optional(str)
+    password = Optional(str, default="")
 
 
 class Player(db.Entity, PlayerMixin):
