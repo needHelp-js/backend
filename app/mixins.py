@@ -120,7 +120,7 @@ class GameMixin(object):
         self.ended = True
         self.winnerNickname = winnerNickname
 
-    def isFinished(self):
+    def checkIfFinished(self):
         playersPlaying = self.players.filter(lambda p: not p.hasLost)[:]
 
         if len(playersPlaying) <= 1:

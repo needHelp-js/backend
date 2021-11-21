@@ -514,7 +514,7 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
         else:
             game.finishGame(winnerNickname=player.nickname)
 
-        if game.isFinished():
+        if game.checkIfFinished():
             await manager.broadcastToGame(
                 gameId,
                 {

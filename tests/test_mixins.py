@@ -194,28 +194,28 @@ def test_finishGame_success(app, dataGameNoPlayers):
         assert game.winnerNickname == "Nickname"
 
 
-def test_isFinished_gameNotEnded(app, data):
+def test_checkIfFinished_gameNotEnded(app, data):
     with db_session:
         game = Game[1]
         assert not game.ended
-        assert not game.isFinished()
+        assert not game.checkIfFinished()
 
 
-def test_isFinished_gameAlreadyEnded(app, data):
+def test_checkIfFinished_gameAlreadyEnded(app, data):
     with db_session:
         game = Game[1]
         game.ended = True
         assert game.ended
-        assert game.isFinished()
+        assert game.checkIfFinished()
 
 
-def test_isFinished_gameWithOnePlayerActive(app, dataTirarDado):
+def test_checkIfFinished_gameWithOnePlayerActive(app, dataTirarDado):
     with db_session:
         game = Game[1]
         player = Player[1]
         assert not game.ended
         player.looseGame()
-        assert game.isFinished()
+        assert game.checkIfFinished()
 
 
 def test_looseGame(app, dataTirarDado):
