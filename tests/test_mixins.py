@@ -18,12 +18,38 @@ def test_countPlayers(app, dataTirarDado):
         assert l == 2
 
 
-def test_incrementTurn(app, dataTirarDado):
+def test_incrementTurn_success(app, dataTirarDado):
     with db_session:
         g1 = Game[1]
         g1.incrementTurn()
         assert g1.currentTurn == 2
 
+def test_incrementTurn_onePlayerLost(app, dataSuspect):
+    # We'll use game 1 with players 1,2,3 and 4. CurrentTurn = 1
+    with db_session:
+        g1 = Game[1]
+        p2 = Player[2]
+        assert g1.currentTurn == 1
+
+        p2.looseGame()
+
+        g1.incrementTurn()
+        assert g1.currentTurn == 3
+
+def test_incrementTurn_twoPlayersLost(app, dataSuspect):
+    # We'll use game 1 with players 1,2,3 and 4. CurrentTurn = 1
+    with db_session:
+        g1 = Game[1]
+        p3 = Player[3]
+        p4 = Player[4]
+        assert g1.currentTurn == 1
+
+        p3.looseGame()
+        p4.looseGame()
+
+        g1.incrementTurn()
+        g1.incrementTurn()
+        assert g1.currentTurn == 1
 
 def test_currentPlayer_success(client, dataCards):
     with db_session:
