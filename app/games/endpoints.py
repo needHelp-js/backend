@@ -24,7 +24,6 @@ from app.models import Card, Game, Player
 from fastapi import APIRouter, Response, WebSocket, status
 from pony.orm import commit, db_session
 from pony.orm.core import flush
-from starlette.status import HTTP_204_NO_CONTENT
 from starlette.websockets import WebSocketDisconnect
 
 router = APIRouter(prefix="/games")
