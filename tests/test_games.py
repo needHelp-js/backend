@@ -631,14 +631,6 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
             "Error": "No hay jugadores que posean alguna de las cartas de la sospecha."
         }
 
-        ans = websocket1.receive_json()
-        assert ans["type"] == TURN_ENDED_EVENT
-        assert ans["payload"] == {"playerId": 2}
-
-        ans = websocket2.receive_json()
-        assert ans["type"] == TURN_ENDED_EVENT
-        assert ans["payload"] == {"playerId": 2}
-
         with db_session:
             assert not Player[1].isSuspecting
 
@@ -784,18 +776,6 @@ def test_replySuspect_success(client, dataSuspect):
         assert ans["type"] == PLAYER_REPLIED_EVENT
         assert ans["payload"] == {"playerId": 2}
 
-        ans = websocket1.receive_json()  # TURN ENDED
-        assert ans["type"] == TURN_ENDED_EVENT
-        assert ans["payload"] == {"playerId": 2}
-
-        ans = websocket2.receive_json()  # TURN ENDED
-        assert ans["type"] == TURN_ENDED_EVENT
-        assert ans["payload"] == {"playerId": 2}
-
-        ans = websocket3.receive_json()  # TURN ENDED
-        assert ans["type"] == TURN_ENDED_EVENT
-        assert ans["payload"] == {"playerId": 2}
-
         with db_session:
             assert Player[1].isSuspecting
 
@@ -875,6 +855,31 @@ def test_replySuspect_repliedIsNotSuspecting(client, dataSuspect):
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json() == {"Error": f"El jugador 1 no está sospechando."}
+
+
+def test_endTurn_success(client, dataTirarDado):
+    manager.createGameConnection(1)
+
+    with db_session:
+        game = Game[1]
+        assert game.currentTurn == 1
+
+    with client.websocket_connect(
+        "/games/1/ws/1"
+    ) as websocket1, client.websocket_connect("/games/1/ws/2") as websocket2:
+        response = client.post("/games/1/endTurn/1")
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        ans = websocket1.receive_json()
+        assert ans["type"] == TURN_ENDED_EVENT
+        assert ans["payload"] == {"playerId": 2, "playerNickname": "p2"}
+
+        ans = websocket2.receive_json()
+
+        with db_session:
+            game = Game[1]
+            assert game.currentTurn == 2
 
 
 def test_accuse_success(client, dataAccuse):
