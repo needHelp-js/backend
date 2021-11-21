@@ -24,6 +24,22 @@ def test_incrementTurn(app, dataTirarDado):
         g1.incrementTurn()
         assert g1.currentTurn == 2
 
+def test_currentPlayer_success(client, dataCards):
+    with db_session:
+        game = Game[1]
+        player = Player[1]
+
+        cPlayer = game.currentPlayer()
+
+        assert cPlayer == player
+
+def test_currentPlayer_noPlayersInGame(client, dataGameNoPlayers):
+    with db_session:
+        game = Game[1]
+
+        cPlayer = game.currentPlayer()
+
+        assert cPlayer is None
 
 def test_setPlayerTurnOrder_success(app, data):
     with db_session:
@@ -160,3 +176,49 @@ def test_findPlayerIdWithCards_fromFirstPlayer(app, dataSuspect):
 
         assert response["playerId"] == 2
         assert response["cards"] == [VictimsNames.CONDESA.value]
+
+
+def test_finishGame_success(app, dataGameNoPlayers):
+    with db_session:
+        game = Game[1]
+        
+        assert not game.ended
+        assert game.winnerNickname == ""
+
+        game.finishGame(winnerNickname="Nickname")
+
+        assert game.ended
+        assert game.winnerNickname == "Nickname"
+
+def test_isFinished_gameNotEnded(app, data):
+    with db_session:
+        game = Game[1]
+        assert not game.ended
+        assert not game.isFinished()
+
+
+def test_isFinished_gameAlreadyEnded(app, data):
+    with db_session:
+        game = Game[1]
+        game.ended = True
+        assert game.ended
+        assert game.isFinished()
+
+def test_isFinished_gameWithOnePlayerActive(app, dataTirarDado):
+    with db_session:
+        game = Game[1]
+        player = Player[1]
+        assert not game.ended
+        player.looseGame()
+        assert game.isFinished()
+
+def test_looseGame(app, dataTirarDado):
+    with db_session:
+        player = Player[1]
+        player.room = 2
+        player.position = 24
+        assert not player.hasLost
+        player.looseGame()
+        assert player.hasLost
+        assert player.room == None
+        assert player.position == None
