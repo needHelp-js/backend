@@ -380,15 +380,6 @@ async def suspect(
                 },
             )
 
-            game.incrementTurn()
-            currentPlayer = game.players.filter(
-                lambda player: player.turnOrder == game.currentTurn
-            ).first()
-            await manager.broadcastToGame(
-                gameId,
-                {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id}},
-            )
-
         else:
             await manager.sendToPlayer(
                 gameId,
@@ -467,6 +458,13 @@ async def replySuspect(
             },
         )
 
+
+@router.post("/{gameId}/endTurn/{playerId}")
+@isPlayersTurn
+async def end_turn(gameId: int, playerId: int):
+    with db_session:
+        game = Game[gameId]
+        
         game.incrementTurn()
         currentPlayer = game.players.filter(
             lambda player: player.turnOrder == game.currentTurn
