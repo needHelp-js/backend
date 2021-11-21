@@ -1,5 +1,6 @@
 from typing import Tuple
 
+from app.enums import MonstersNames, RoomsNames, VictimsNames
 from pydantic import BaseModel
 
 
@@ -35,3 +36,9 @@ class SuspectSchema(BaseModel):
 class ReplySuspectSchema(BaseModel):
     replyToPlayerId: int
     cardName: str
+
+
+class AccuseSchema(BaseModel):
+    victimCardName: VictimsNames
+    monsterCardName: MonstersNames
+    roomCardName: RoomsNames
