@@ -43,7 +43,7 @@ class BoardManager:
             self._board[6][x] = "."
             self._board[13][x] = "."
 
-        # Entradas a recintos
+        # Room's entries
         self._board[2][6] = "#"
         self._board[10][6] = "#"
         self._board[15][6] = "#"
@@ -78,13 +78,8 @@ class BoardManager:
         room8 = Room(id=8, name=RoomsNames.LABORATORIO.value, entries=[(16, 13)])
         self._rooms.append(room8)
 
-        """
-        Casillas especiales: [(3, 6) -> (14, 6)]
-                             [(3, 13) -> (14, 13)]
-                             [(13, 4) -> (13, 15)]
-        """
 
-        # Casillas Especiales
+        # Speciall Cells
         self._board[6][3] = "!"
         self._board[6][14] = "!"
         self._board[13][4] = "!"
@@ -492,7 +487,7 @@ class BoardManager:
             availableRooms.append(room)
 
         if x == 6 or x == 13:
-            # Calculo las posiciones disponibles en caso de teletransportarte
+            # Calculates the available positions in case of teleportation
             if diceNumber >= 1 and self._board[y][x] == "!":
                 aux_Y, aux_X = self.detectSpecialCell(y, x)
                 availablePositions.append((aux_Y, aux_X))
@@ -502,13 +497,13 @@ class BoardManager:
                 self.moveDown(
                     aux_Y, aux_X, diceNumber - 1, availablePositions, availableRooms
                 )
-
-            # Calculo las posiciones disponibles desde la posición actual (sin teletransportación)
+            
+            # Calculates the available positions from the actual position (without teleportation)
             self.moveUp(y, x, diceNumber, availablePositions, availableRooms)
             self.moveDown(y, x, diceNumber, availablePositions, availableRooms)
 
         if y == 6 or y == 13:
-            # Calculo las posiciones disponibles en caso de teletransportarte
+
             if diceNumber >= 1 and self._board[y][x] == "!":
                 aux_Y, aux_X = self.detectSpecialCell(y, x)
                 availablePositions.append((aux_Y, aux_X))
@@ -519,7 +514,6 @@ class BoardManager:
                     aux_Y, aux_X, diceNumber - 1, availablePositions, availableRooms
                 )
 
-            # Calculo las posiciones disponibles desde la posición actual (sin teletransportación)
             self.moveLeft(y, x, diceNumber, availablePositions, availableRooms)
             self.moveRight(y, x, diceNumber, availablePositions, availableRooms)
 
@@ -559,7 +553,7 @@ class BoardManager:
                 y, x, diceNumber
             )
 
-        # Elimina repetidos en caso de que los haya
+        # Delete repeating elements
         availablePositions = list(dict.fromkeys(availablePositions))
         availableRooms = list(dict.fromkeys(availableRooms))
 
