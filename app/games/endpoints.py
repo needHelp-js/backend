@@ -142,13 +142,18 @@ async def getDice(gameID: int, playerID: int, response: Response):
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Jugador no existente"}
 
+        elif player.hasRolledDice:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": "Este jugador ya tiró el dado"}
+
         elif game.currentTurn == player.turnOrder:
             ans = randint(1, 6)
+            player.hasRolledDice = True
             await manager.broadcastToGame(
                 gameID, {"type": DICE_ROLL_EVENT, "payload": ans}
             )
             response.status_code = status.HTTP_204_NO_CONTENT
-
+            
             return {}
 
         else:
@@ -272,11 +277,16 @@ async def movePlayer(
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"Error": "Parámetros incorrectos"}
 
+        elif player.hasMoved:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": "Este jugador ya se movió"}
+
         elif data.room != "":
 
             if board.checkRoom(player, data.diceNumber, data.room):
                 player.room = board.getRoomId(data.room)
                 player.position = None
+                player.hasMoved = True
                 await manager.broadcastToGame(
                     game.id,
                     {
@@ -299,6 +309,7 @@ async def movePlayer(
                 position = board.getPositionIdFromTuple(data.position)
                 player.position = position
                 player.room = None
+                player.hasMoved = True
                 await manager.broadcastToGame(
                     game.id,
                     {
@@ -325,7 +336,7 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
         dict = game.to_dict(
             related_objects=True, with_collections=True, exclude=["cards", "password"]
         )
-        excluded_fields = ["hostedGame", "currentGame"]
+        excluded_fields = ["hostedGame", "currentGame", "hasRolledDice", "hasMoved", "hasSuspected"]
 
         dict["players"] = [p.to_dict(exclude=excluded_fields) for p in dict["players"]]
 
@@ -377,7 +388,12 @@ async def suspect(
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"Error": "Debes mandar una victima y un monstruo"}
 
+        if player.hasSuspected:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": "Este jugador ya realizó una sospecha"}
+
         response.status_code = status.HTTP_204_NO_CONTENT
+        player.hasSuspected = True
         await manager.broadcastToGame(
             gameId,
             {
@@ -497,7 +513,11 @@ async def replySuspect(
 async def end_turn(gameId: int, playerId: int, response: Response):
     with db_session:
         game = Game[gameId]
-
+        player = Player[playerId]
+        player.hasRolledDice = False
+        player.hasMoved = False
+        player.hasSuspected = False
+        
         response.status_code = status.HTTP_204_NO_CONTENT
 
         game.incrementTurn()
