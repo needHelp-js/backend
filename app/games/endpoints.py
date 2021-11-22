@@ -185,13 +185,29 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
 
         game.players.add(player)
 
-        await manager.broadcastToGame(
-            game.id,
-            {
-                "type": PLAYER_JOINED_EVENT,
-                "payload": {"playerId": player.id, "playerNickname": player.nickname},
-            },
-        )
+        try:
+            await manager.broadcastToGame(
+                game.id,
+                {
+                    "type": PLAYER_JOINED_EVENT,
+                    "payload": {
+                        "playerId": player.id,
+                        "playerNickname": player.nickname,
+                    },
+                },
+            )
+        except GameConnectionDoesNotExist:
+            manager.createGameConnection(game.id)
+            await manager.broadcastToGame(
+                game.id,
+                {
+                    "type": PLAYER_JOINED_EVENT,
+                    "payload": {
+                        "playerId": player.id,
+                        "playerNickname": player.nickname,
+                    },
+                },
+            )
 
         return {"playerId": player.id}
 
