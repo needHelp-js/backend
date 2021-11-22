@@ -81,18 +81,22 @@ async def beginGame(gameID: int, playerID: int, response: Response):
     with db_session:
         game = Game.get(id=gameID)
         player = Player.get(id=playerID)
+
         if game is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Partida no existente"}
+
         elif player is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Jugador no existente"}
+
         elif game.host.id == player.id:
             if game.countPlayers() <= 1:
                 response.status_code = status.HTTP_403_FORBIDDEN
                 return {
                     "Error": "La partida no tiene la cantidad de jugadores suficientes como para ser iniciada"
                 }
+
             elif game.started == False:
                 game.startGame()
                 board.createBoard()
@@ -114,6 +118,8 @@ async def beginGame(gameID: int, playerID: int, response: Response):
                     except PlayerNotConnected:
                         pass
 
+                return {}
+
             else:
                 response.status_code = status.HTTP_403_FORBIDDEN
                 return {"Error": "La partida ya empezó"}
@@ -127,18 +133,24 @@ async def getDice(gameID: int, playerID: int, response: Response):
     with db_session:
         game = Game.get(id=gameID)
         player = Player.get(id=playerID)
+
         if game is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Partida no existente"}
+
         elif player is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Jugador no existente"}
+
         elif game.currentTurn == player.turnOrder:
             ans = randint(1, 6)
             await manager.broadcastToGame(
                 gameID, {"type": DICE_ROLL_EVENT, "payload": ans}
             )
             response.status_code = status.HTTP_204_NO_CONTENT
+
+            return {}
+
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": "No es el turno del jugador"}
@@ -412,6 +424,8 @@ async def suspect(
                 },
             )
 
+        return {}
+
 
 @router.post("/{gameId}/replySuspect/{playerId}")
 @gameRequired
@@ -500,6 +514,7 @@ async def end_turn(gameId: int, playerId: int, response: Response):
                 },
             },
         )
+        return {}
 
 
 @router.post("/{gameId}/accuse/{playerId}")
@@ -583,6 +598,8 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
                 gameId,
                 {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id}},
             )
+
+        return {}
 
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
