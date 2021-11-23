@@ -918,10 +918,7 @@ def test_accuse_success(client, dataAccuse):
         assert ans["type"] == PLAYER_ACCUSED_EVENT
         assert ans["payload"] == {
             "playerId": 1,
-            "playerNickname": "p1",
-            "victimCardName": mayordomo,
-            "monsterCardName": hombre_lobo,
-            "roomCardName": panteon,
+            "playerNickname": "p1"
         }
 
         ans = websocket2.receive_json()  # PLAYER ACCUSED
@@ -930,7 +927,8 @@ def test_accuse_success(client, dataAccuse):
         ans = websocket1.receive_json()  # GAME ENDED
         assert ans["type"] == GAME_ENDED_EVENT
         assert ans["payload"] == {
-            "winnerNickname": "p1",
+            "playerId": 1,
+            "playerNickname": "p1",
             "cardsInEnvelope": [
                 {"name": "Hombre Lobo", "type": "monstruo"},
                 {"name": "Panteon", "type": "recinto"},
@@ -1045,7 +1043,8 @@ def test_accuse_cardsNotInEnvelopeAndGameEnds(client, dataAccuse):
         ans = websocket1.receive_json()  # GAME ENDED
         assert ans["type"] == GAME_ENDED_EVENT
         assert ans["payload"] == {
-            "winnerNickname": "p3",
+            "playerId": 3,
+            "playerNickname": "p3",
             "cardsInEnvelope": [
                 {"name": "Hombre Lobo", "type": "monstruo"},
                 {"name": "Panteon", "type": "recinto"},

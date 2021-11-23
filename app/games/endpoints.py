@@ -566,10 +566,7 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
                 "type": PLAYER_ACCUSED_EVENT,
                 "payload": {
                     "playerId": player.id,
-                    "playerNickname": player.nickname,
-                    "victimCardName": victimCardName.value,
-                    "monsterCardName": monsterCardName.value,
-                    "roomCardName": roomCardName.value,
+                    "playerNickname": player.nickname
                 },
             },
         )
@@ -598,13 +595,16 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
             game.finishGame(winnerNickname=player.nickname)
 
         if game.checkIfFinished():
+            
+            winner = game.players.filter(lambda p: p.nickname == game.winnerNickname).first()
 
             await manager.broadcastToGame(
                 gameId,
                 {
                     "type": GAME_ENDED_EVENT,
                     "payload": {
-                        "winnerNickname": game.winnerNickname,
+                        "playerId": winner.id,
+                        "playerNickname": game.winnerNickname,
                         "cardsInEnvelope": [
                             c.to_dict(["type", "name"]) for c in cardsInEnvelope
                         ],
