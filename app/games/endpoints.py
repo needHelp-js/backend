@@ -500,7 +500,7 @@ async def replySuspect(
             }
 
         # We now know the replied player exists, it's on the same game as playerId and they are suspecting.
-
+        repliedPlayer.isSuspecting = False
         response.status_code = status.HTTP_204_NO_CONTENT
         await manager.sendToPlayer(
             gameId,
