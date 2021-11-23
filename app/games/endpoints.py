@@ -293,6 +293,7 @@ async def movePlayer(
                         "type": ENTER_ROOM_EVENT,
                         "payload": {
                             "playerId": player.id,
+                            "playerNickname": player.nickname,
                             "playerRoom": board.getRoomName(player.room),
                         },
                     },
@@ -316,6 +317,7 @@ async def movePlayer(
                         "type": MOVE_PLAYER_EVENT,
                         "payload": {
                             "playerId": player.id,
+                            "playerNickname": player.nickname,
                             "playerPosition": tuple(data.position),
                         },
                     },
@@ -399,7 +401,8 @@ async def suspect(
             {
                 "type": SUSPICION_MADE_EVENT,
                 "payload": {
-                    "playerId": playerId,
+                    "playerId": player.id,
+                    "playerNickname": player.nickname,
                     "card1Name": card1Name,
                     "card2Name": card2Name,
                     "roomName": playerRoom,
@@ -434,7 +437,8 @@ async def suspect(
                 {
                     "type": YOU_ARE_SUSPICIOUS_EVENT,
                     "payload": {
-                        "playerId": playerId,
+                        "playerId": player.id,
+                        "playerNickname": player.nickname,
                         "cards": responseInfo["cards"],
                     },
                 },
@@ -495,7 +499,7 @@ async def replySuspect(
             schema.replyToPlayerId,
             {
                 "type": SUSPICION_RESPONSE_EVENT,
-                "payload": {"playerId": playerId, "cardName": schema.cardName},
+                "payload": {"playerId": player.id, "playerNickname": player.nickname, "cardName": schema.cardName},
             },
         )
 
@@ -503,7 +507,7 @@ async def replySuspect(
             gameId,
             {
                 "type": PLAYER_REPLIED_EVENT,
-                "payload": {"playerId": playerId},
+                "payload": {"playerId": player.id, "playerNickname": player.nickname},
             },
         )
 
@@ -616,7 +620,7 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
             currentPlayer = game.currentPlayer()
             await manager.broadcastToGame(
                 gameId,
-                {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id}},
+                {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id, "playerNickname": currentPlayer.nickname}},
             )
 
         return {}

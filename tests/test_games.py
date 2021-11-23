@@ -266,7 +266,7 @@ def test_movePlayer_correctRoom(client, dataBoard):
         type = ans["type"]
         payload = ans["payload"]
         assert type == "ENTER_ROOM_EVENT"
-        assert payload == {"playerId": 1, "playerRoom": "Cochera"}
+        assert payload == {"playerId": 1, "playerNickname": "p1", "playerRoom": "Cochera"}
 
 
 def test_movePlayer_wrongRoom(client, dataBoard):
@@ -287,7 +287,7 @@ def test_movePlayer_correctPosition(client, dataBoard):
         type = ans["type"]
         payload = ans["payload"]
         assert type == "MOVE_PLAYER_EVENT"
-        assert payload == {"playerId": 1, "playerPosition": [1, 6]}
+        assert payload == {"playerId": 1, "playerNickname": "p1", "playerPosition": [1, 6]}
 
 
 def test_movePlayer_wrongPosition(client, dataBoard):
@@ -522,6 +522,7 @@ def test_suspect_success(client, dataSuspect):
         assert ans["type"] == SUSPICION_MADE_EVENT
         assert ans["payload"] == {
             "playerId": 1,
+            "playerNickname": "p1",
             "card1Name": VictimsNames.CONDE.value,
             "card2Name": MonstersNames.DRACULA.value,
             "roomName": RoomsNames.LABORATORIO.value,
@@ -531,6 +532,7 @@ def test_suspect_success(client, dataSuspect):
         assert ans["type"] == SUSPICION_MADE_EVENT
         assert ans["payload"] == {
             "playerId": 1,
+            "playerNickname": "p1",
             "card1Name": VictimsNames.CONDE.value,
             "card2Name": MonstersNames.DRACULA.value,
             "roomName": RoomsNames.LABORATORIO.value,
@@ -538,7 +540,7 @@ def test_suspect_success(client, dataSuspect):
 
         ans = websocket2.receive_json()
         assert ans["type"] == YOU_ARE_SUSPICIOUS_EVENT
-        assert ans["payload"] == {"playerId": 1, "cards": [MonstersNames.DRACULA.value]}
+        assert ans["payload"] == {"playerId": 1, "playerNickname": "p1", "cards": [MonstersNames.DRACULA.value]}
 
         with db_session:
             assert Player[1].isSuspecting
@@ -564,6 +566,7 @@ def test_suspect_success_otherPlayerWithCard(client, dataSuspect):
         assert ans["type"] == SUSPICION_MADE_EVENT
         assert ans["payload"] == {
             "playerId": 1,
+            "playerNickname": "p1",
             "card1Name": VictimsNames.CONDE.value,
             "card2Name": MonstersNames.HOMBRE_LOBO.value,
             "roomName": RoomsNames.LABORATORIO.value,
@@ -573,6 +576,7 @@ def test_suspect_success_otherPlayerWithCard(client, dataSuspect):
         assert ans["type"] == SUSPICION_MADE_EVENT
         assert ans["payload"] == {
             "playerId": 1,
+            "playerNickname": "p1",
             "card1Name": VictimsNames.CONDE.value,
             "card2Name": MonstersNames.HOMBRE_LOBO.value,
             "roomName": RoomsNames.LABORATORIO.value,
@@ -580,7 +584,7 @@ def test_suspect_success_otherPlayerWithCard(client, dataSuspect):
 
         ans = websocket3.receive_json()
         assert ans["type"] == YOU_ARE_SUSPICIOUS_EVENT
-        assert ans["payload"] == {"playerId": 1, "cards": [VictimsNames.CONDE.value]}
+        assert ans["payload"] == {"playerId": 1, "playerNickname": "p1", "cards": [VictimsNames.CONDE.value]}
 
         with db_session:
             assert Player[1].isSuspecting
@@ -605,6 +609,7 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
         assert ans["type"] == SUSPICION_MADE_EVENT
         assert ans["payload"] == {
             "playerId": 1,
+            "playerNickname": "p1",
             "card1Name": VictimsNames.MAYORDOMO.value,
             "card2Name": MonstersNames.HOMBRE_LOBO.value,
             "roomName": RoomsNames.LABORATORIO.value,
@@ -614,6 +619,7 @@ def test_suspect_noPlayerWithCards(client, dataSuspect):
         assert ans["type"] == SUSPICION_MADE_EVENT
         assert ans["payload"] == {
             "playerId": 1,
+            "playerNickname": "p1",
             "card1Name": VictimsNames.MAYORDOMO.value,
             "card2Name": MonstersNames.HOMBRE_LOBO.value,
             "roomName": RoomsNames.LABORATORIO.value,
@@ -761,20 +767,21 @@ def test_replySuspect_success(client, dataSuspect):
         assert ans["type"] == SUSPICION_RESPONSE_EVENT
         assert ans["payload"] == {
             "playerId": 2,
+            "playerNickname": "p2",
             "cardName": MonstersNames.DRACULA.value,
         }
 
         ans = websocket1.receive_json()  # SUSPICION RESPONSE
         assert ans["type"] == PLAYER_REPLIED_EVENT
-        assert ans["payload"] == {"playerId": 2}
+        assert ans["payload"] == {"playerId": 2, "playerNickname": "p2"}
 
         ans = websocket2.receive_json()  # SUSPICION RESPONSE
         assert ans["type"] == PLAYER_REPLIED_EVENT
-        assert ans["payload"] == {"playerId": 2}
+        assert ans["payload"] == {"playerId": 2, "playerNickname": "p2"}
 
         ans = websocket3.receive_json()  # SUSPICION RESPONSE
         assert ans["type"] == PLAYER_REPLIED_EVENT
-        assert ans["payload"] == {"playerId": 2}
+        assert ans["payload"] == {"playerId": 2, "playerNickname": "p2"}
 
         with db_session:
             assert Player[1].isSuspecting
