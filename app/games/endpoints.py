@@ -326,6 +326,7 @@ async def movePlayer(
                 response.status_code = status.HTTP_403_FORBIDDEN
                 return {"Error": "Posición no disponible para este jugador."}
     response.status_code == 204
+    return {}
 
 @router.get("/{gameId}")
 @gameRequired
