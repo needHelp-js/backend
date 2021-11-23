@@ -30,6 +30,9 @@ class Player(db.Entity, PlayerMixin):
     isSuspecting = Required(bool, default=False)
     cards = Set("Card")
     hasLost = Required(bool, default=False)
+    hasMoved = Required(bool, default=False)
+    hasSuspected = Required(bool, default=False)
+    hasRolledDice = Required(bool, default=False)
 
 
 def checkCardType(val):

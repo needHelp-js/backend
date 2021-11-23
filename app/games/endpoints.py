@@ -81,18 +81,22 @@ async def beginGame(gameID: int, playerID: int, response: Response):
     with db_session:
         game = Game.get(id=gameID)
         player = Player.get(id=playerID)
+
         if game is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Partida no existente"}
+
         elif player is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Jugador no existente"}
+
         elif game.host.id == player.id:
             if game.countPlayers() <= 1:
                 response.status_code = status.HTTP_403_FORBIDDEN
                 return {
                     "Error": "La partida no tiene la cantidad de jugadores suficientes como para ser iniciada"
                 }
+
             elif game.started == False:
                 game.startGame()
                 board.createBoard()
@@ -114,6 +118,8 @@ async def beginGame(gameID: int, playerID: int, response: Response):
                     except PlayerNotConnected:
                         pass
 
+                return {}
+
             else:
                 response.status_code = status.HTTP_403_FORBIDDEN
                 return {"Error": "La partida ya empezó"}
@@ -127,18 +133,29 @@ async def getDice(gameID: int, playerID: int, response: Response):
     with db_session:
         game = Game.get(id=gameID)
         player = Player.get(id=playerID)
+
         if game is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Partida no existente"}
+
         elif player is None:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"Error": "Jugador no existente"}
+
+        elif player.hasRolledDice:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": "Este jugador ya tiró el dado"}
+
         elif game.currentTurn == player.turnOrder:
             ans = randint(1, 6)
+            player.hasRolledDice = True
             await manager.broadcastToGame(
                 gameID, {"type": DICE_ROLL_EVENT, "payload": ans}
             )
             response.status_code = status.HTTP_204_NO_CONTENT
+            
+            return {}
+
         else:
             response.status_code = status.HTTP_403_FORBIDDEN
             return {"Error": "No es el turno del jugador"}
@@ -165,11 +182,11 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
 
         if game.started:
             response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": f"La partida {gameId} ya esta empezada."}
+            return {"Error": f"La partida {game.name} ya esta empezada."}
 
         if game.countPlayers() == 6:
             response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": f"La partida {gameId} ya esta llena."}
+            return {"Error": f"La partida {game.name} ya esta llena."}
 
         if game.password != joinGameData.password:
             if game.password == "":
@@ -185,13 +202,29 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
 
         game.players.add(player)
 
-        await manager.broadcastToGame(
-            game.id,
-            {
-                "type": PLAYER_JOINED_EVENT,
-                "payload": {"playerId": player.id, "playerNickname": player.nickname},
-            },
-        )
+        try:
+            await manager.broadcastToGame(
+                game.id,
+                {
+                    "type": PLAYER_JOINED_EVENT,
+                    "payload": {
+                        "playerId": player.id,
+                        "playerNickname": player.nickname,
+                    },
+                },
+            )
+        except GameConnectionDoesNotExist:
+            manager.createGameConnection(game.id)
+            await manager.broadcastToGame(
+                game.id,
+                {
+                    "type": PLAYER_JOINED_EVENT,
+                    "payload": {
+                        "playerId": player.id,
+                        "playerNickname": player.nickname,
+                    },
+                },
+            )
 
         return {"playerId": player.id}
 
@@ -244,17 +277,23 @@ async def movePlayer(
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"Error": "Parámetros incorrectos"}
 
+        elif player.hasMoved:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": "Este jugador ya se movió"}
+
         elif data.room != "":
 
             if board.checkRoom(player, data.diceNumber, data.room):
                 player.room = board.getRoomId(data.room)
                 player.position = None
+                player.hasMoved = True
                 await manager.broadcastToGame(
                     game.id,
                     {
                         "type": ENTER_ROOM_EVENT,
                         "payload": {
                             "playerId": player.id,
+                            "playerNickname": player.nickname,
                             "playerRoom": board.getRoomName(player.room),
                         },
                     },
@@ -271,12 +310,14 @@ async def movePlayer(
                 position = board.getPositionIdFromTuple(data.position)
                 player.position = position
                 player.room = None
+                player.hasMoved = True
                 await manager.broadcastToGame(
                     game.id,
                     {
                         "type": MOVE_PLAYER_EVENT,
                         "payload": {
                             "playerId": player.id,
+                            "playerNickname": player.nickname,
                             "playerPosition": tuple(data.position),
                         },
                     },
@@ -284,7 +325,8 @@ async def movePlayer(
             else:
                 response.status_code = status.HTTP_403_FORBIDDEN
                 return {"Error": "Posición no disponible para este jugador."}
-
+    response.status_code == 204
+    return {}
 
 @router.get("/{gameId}")
 @gameRequired
@@ -297,7 +339,7 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
         dict = game.to_dict(
             related_objects=True, with_collections=True, exclude=["cards", "password"]
         )
-        excluded_fields = ["hostedGame", "currentGame"]
+        excluded_fields = ["hostedGame", "currentGame", "hasRolledDice", "hasMoved", "hasSuspected"]
 
         dict["players"] = [p.to_dict(exclude=excluded_fields) for p in dict["players"]]
 
@@ -327,7 +369,7 @@ async def suspect(
 
         if player.room is None:
             response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": f"El jugador {playerId} no está en ningun recinto"}
+            return {"Error": f"El jugador {player.nickname} no está en ningun recinto"}
 
         card1Name = schema.card1Name
         card2Name = schema.card2Name
@@ -349,13 +391,18 @@ async def suspect(
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"Error": "Debes mandar una victima y un monstruo"}
 
+        if player.hasSuspected:
+            response.status_code = status.HTTP_403_FORBIDDEN
+            return {"Error": "Este jugador ya realizó una sospecha"}
+
         response.status_code = status.HTTP_204_NO_CONTENT
         await manager.broadcastToGame(
             gameId,
             {
                 "type": SUSPICION_MADE_EVENT,
                 "payload": {
-                    "playerId": playerId,
+                    "playerId": player.id,
+                    "playerNickname": player.nickname,
                     "card1Name": card1Name,
                     "card2Name": card2Name,
                     "roomName": playerRoom,
@@ -363,6 +410,7 @@ async def suspect(
             },
         )
 
+        player.hasSuspected = True
         player.isSuspecting = True
 
         game = Game[gameId]
@@ -390,11 +438,14 @@ async def suspect(
                 {
                     "type": YOU_ARE_SUSPICIOUS_EVENT,
                     "payload": {
-                        "playerId": playerId,
+                        "playerId": player.id,
+                        "playerNickname": player.nickname,
                         "cards": responseInfo["cards"],
                     },
                 },
             )
+
+        return {}
 
 
 @router.post("/{gameId}/replySuspect/{playerId}")
@@ -418,7 +469,7 @@ async def replySuspect(
         if card not in player.cards:
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {
-                "Error": f"El jugador {playerId} no tiene la carta {schema.cardName}"
+                "Error": f"El jugador {player.nickname} no tiene la carta {schema.cardName}"
             }
 
         # We now know that the selected card is valid and the player has it.
@@ -449,7 +500,7 @@ async def replySuspect(
             schema.replyToPlayerId,
             {
                 "type": SUSPICION_RESPONSE_EVENT,
-                "payload": {"playerId": playerId, "cardName": schema.cardName},
+                "payload": {"playerId": player.id, "playerNickname": player.nickname, "cardName": schema.cardName},
             },
         )
 
@@ -457,7 +508,7 @@ async def replySuspect(
             gameId,
             {
                 "type": PLAYER_REPLIED_EVENT,
-                "payload": {"playerId": playerId},
+                "payload": {"playerId": player.id, "playerNickname": player.nickname},
             },
         )
 
@@ -467,7 +518,11 @@ async def replySuspect(
 async def end_turn(gameId: int, playerId: int, response: Response):
     with db_session:
         game = Game[gameId]
-
+        player = Player[playerId]
+        player.hasRolledDice = False
+        player.hasMoved = False
+        player.hasSuspected = False
+        
         response.status_code = status.HTTP_204_NO_CONTENT
 
         game.incrementTurn()
@@ -484,6 +539,7 @@ async def end_turn(gameId: int, playerId: int, response: Response):
                 },
             },
         )
+        return {}
 
 
 @router.post("/{gameId}/accuse/{playerId}")
@@ -515,10 +571,7 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
                 "type": PLAYER_ACCUSED_EVENT,
                 "payload": {
                     "playerId": player.id,
-                    "playerNickname": player.nickname,
-                    "victimCardName": victimCardName.value,
-                    "monsterCardName": monsterCardName.value,
-                    "roomCardName": roomCardName.value,
+                    "playerNickname": player.nickname
                 },
             },
         )
@@ -547,13 +600,16 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
             game.finishGame(winnerNickname=player.nickname)
 
         if game.checkIfFinished():
+            
+            winner = game.players.filter(lambda p: p.nickname == game.winnerNickname).first()
 
             await manager.broadcastToGame(
                 gameId,
                 {
                     "type": GAME_ENDED_EVENT,
                     "payload": {
-                        "winnerNickname": game.winnerNickname,
+                        "playerId": winner.id,
+                        "playerNickname": game.winnerNickname,
                         "cardsInEnvelope": [
                             c.to_dict(["type", "name"]) for c in cardsInEnvelope
                         ],
@@ -565,8 +621,10 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
             currentPlayer = game.currentPlayer()
             await manager.broadcastToGame(
                 gameId,
-                {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id}},
+                {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id, "playerNickname": currentPlayer.nickname}},
             )
+
+        return {}
 
 
 @router.websocket("/games/{gameId}/ws/{playerId}")
