@@ -32,6 +32,16 @@ class GameMixin(object):
             player.turnOrder = turnToAssign
             turnToAssign += 1
 
+        aux = 0
+        for player in self.players:
+            if player.hostedGame != None:
+                aux = player.turnOrder 
+                player.turnOrder = 1
+        
+        for player in self.players:
+            if player.turnOrder == 1 and player.hostedGame == None:
+                player.turnOrder = aux
+
     def setPlayersInitialPositions(self):
         initialPositions = [6, 13, 120, 139, 260, 279, 386, 393]
         i = 0
@@ -40,11 +50,11 @@ class GameMixin(object):
             i += 1
 
     def startGame(self):
+        self.setPlayersTurnOrder()
         self.setPlayersInitialPositions()
         self.currentTurn = 1
         cards = self.createGameCards()
         self.assignCardsToPlayers(cards)
-        self.setPlayersTurnOrder()
         self.started = True
 
     def createGameCards(self):
