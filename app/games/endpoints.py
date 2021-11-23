@@ -537,7 +537,7 @@ async def end_turn(gameId: int, playerId: int, response: Response):
         if player.isSuspecting:
             response.status_code == status.HTTP_403_FORBIDDEN
             return {
-                "Error": f"El jugador {player.nickName} está esperando la respuesta de su sospecha"
+                "Error": f"El jugador {player.nickname} está esperando la respuesta de su sospecha"
             }
 
         game.incrementTurn()
