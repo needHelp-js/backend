@@ -78,7 +78,6 @@ class BoardManager:
         room8 = Room(id=8, name=RoomsNames.LABORATORIO.value, entries=[(16, 13)])
         self._rooms.append(room8)
 
-
         # Speciall Cells
         self._board[6][3] = "!"
         self._board[6][14] = "!"
@@ -497,7 +496,7 @@ class BoardManager:
                 self.moveDown(
                     aux_Y, aux_X, diceNumber - 1, availablePositions, availableRooms
                 )
-            
+
             # Calculates the available positions from the actual position (without teleportation)
             self.moveUp(y, x, diceNumber, availablePositions, availableRooms)
             self.moveDown(y, x, diceNumber, availablePositions, availableRooms)

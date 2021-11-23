@@ -1,20 +1,12 @@
 from app.enums import MonstersNames, RoomsNames, VictimsNames
 from app.games.boardManager import Room
 from app.games.endpoints import availablePositions, manager
-from app.games.events import (
-    BEGIN_GAME_EVENT,
-    DEAL_CARDS_EVENT,
-    GAME_ENDED_EVENT,
-    PLAYER_ACCUSED_EVENT,
-    PLAYER_JOINED_EVENT,
-    PLAYER_LOST_EVENT,
-    PLAYER_REPLIED_EVENT,
-    SUSPICION_FAILED_EVENT,
-    SUSPICION_MADE_EVENT,
-    SUSPICION_RESPONSE_EVENT,
-    TURN_ENDED_EVENT,
-    YOU_ARE_SUSPICIOUS_EVENT,
-)
+from app.games.events import (BEGIN_GAME_EVENT, DEAL_CARDS_EVENT,
+                              GAME_ENDED_EVENT, PLAYER_ACCUSED_EVENT,
+                              PLAYER_JOINED_EVENT, PLAYER_LOST_EVENT,
+                              PLAYER_REPLIED_EVENT, SUSPICION_FAILED_EVENT,
+                              SUSPICION_MADE_EVENT, SUSPICION_RESPONSE_EVENT,
+                              TURN_ENDED_EVENT, YOU_ARE_SUSPICIOUS_EVENT)
 from app.models import Game, Player
 from fastapi import status
 from pony.orm import db_session
@@ -266,7 +258,11 @@ def test_movePlayer_correctRoom(client, dataBoard):
         type = ans["type"]
         payload = ans["payload"]
         assert type == "ENTER_ROOM_EVENT"
-        assert payload == {"playerId": 1, "playerNickname": "p1", "playerRoom": "Cochera"}
+        assert payload == {
+            "playerId": 1,
+            "playerNickname": "p1",
+            "playerRoom": "Cochera",
+        }
 
 
 def test_movePlayer_wrongRoom(client, dataBoard):
@@ -287,7 +283,11 @@ def test_movePlayer_correctPosition(client, dataBoard):
         type = ans["type"]
         payload = ans["payload"]
         assert type == "MOVE_PLAYER_EVENT"
-        assert payload == {"playerId": 1, "playerNickname": "p1", "playerPosition": [1, 6]}
+        assert payload == {
+            "playerId": 1,
+            "playerNickname": "p1",
+            "playerPosition": [1, 6],
+        }
 
 
 def test_movePlayer_wrongPosition(client, dataBoard):
@@ -540,7 +540,11 @@ def test_suspect_success(client, dataSuspect):
 
         ans = websocket2.receive_json()
         assert ans["type"] == YOU_ARE_SUSPICIOUS_EVENT
-        assert ans["payload"] == {"playerId": 1, "playerNickname": "p1", "cards": [MonstersNames.DRACULA.value]}
+        assert ans["payload"] == {
+            "playerId": 1,
+            "playerNickname": "p1",
+            "cards": [MonstersNames.DRACULA.value],
+        }
 
         with db_session:
             assert Player[1].isSuspecting
@@ -584,7 +588,11 @@ def test_suspect_success_otherPlayerWithCard(client, dataSuspect):
 
         ans = websocket3.receive_json()
         assert ans["type"] == YOU_ARE_SUSPICIOUS_EVENT
-        assert ans["payload"] == {"playerId": 1, "playerNickname": "p1", "cards": [VictimsNames.CONDE.value]}
+        assert ans["payload"] == {
+            "playerId": 1,
+            "playerNickname": "p1",
+            "cards": [VictimsNames.CONDE.value],
+        }
 
         with db_session:
             assert Player[1].isSuspecting
@@ -923,10 +931,7 @@ def test_accuse_success(client, dataAccuse):
 
         ans = websocket1.receive_json()  # PLAYER ACCUSED
         assert ans["type"] == PLAYER_ACCUSED_EVENT
-        assert ans["payload"] == {
-            "playerId": 1,
-            "playerNickname": "p1"
-        }
+        assert ans["payload"] == {"playerId": 1, "playerNickname": "p1"}
 
         ans = websocket2.receive_json()  # PLAYER ACCUSED
         ans = websocket3.receive_json()  # PLAYER ACCUSED

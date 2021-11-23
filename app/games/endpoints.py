@@ -153,7 +153,7 @@ async def getDice(gameID: int, playerID: int, response: Response):
                 gameID, {"type": DICE_ROLL_EVENT, "payload": ans}
             )
             response.status_code = status.HTTP_204_NO_CONTENT
-            
+
             return {}
 
         else:
@@ -328,6 +328,7 @@ async def movePlayer(
     response.status_code == 204
     return {}
 
+
 @router.get("/{gameId}")
 @gameRequired
 @playerInGame
@@ -339,7 +340,13 @@ async def getGameDetails(gameId: int, playerId: int, response: Response):
         dict = game.to_dict(
             related_objects=True, with_collections=True, exclude=["cards", "password"]
         )
-        excluded_fields = ["hostedGame", "currentGame", "hasRolledDice", "hasMoved", "hasSuspected"]
+        excluded_fields = [
+            "hostedGame",
+            "currentGame",
+            "hasRolledDice",
+            "hasMoved",
+            "hasSuspected",
+        ]
 
         dict["players"] = [p.to_dict(exclude=excluded_fields) for p in dict["players"]]
 
@@ -500,7 +507,11 @@ async def replySuspect(
             schema.replyToPlayerId,
             {
                 "type": SUSPICION_RESPONSE_EVENT,
-                "payload": {"playerId": player.id, "playerNickname": player.nickname, "cardName": schema.cardName},
+                "payload": {
+                    "playerId": player.id,
+                    "playerNickname": player.nickname,
+                    "cardName": schema.cardName,
+                },
             },
         )
 
@@ -522,8 +533,12 @@ async def end_turn(gameId: int, playerId: int, response: Response):
         player.hasRolledDice = False
         player.hasMoved = False
         player.hasSuspected = False
-        
-        response.status_code = status.HTTP_204_NO_CONTENT
+
+        if player.isSuspecting:
+            response.status_code == status.HTTP_403_FORBIDDEN
+            return {
+                "Error": f"El jugador {player.nickName} está esperando la respuesta de su sospecha"
+            }
 
         game.incrementTurn()
         currentPlayer = game.players.filter(
@@ -539,6 +554,7 @@ async def end_turn(gameId: int, playerId: int, response: Response):
                 },
             },
         )
+        response.status_code = status.HTTP_204_NO_CONTENT
         return {}
 
 
@@ -569,10 +585,7 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
             gameId,
             {
                 "type": PLAYER_ACCUSED_EVENT,
-                "payload": {
-                    "playerId": player.id,
-                    "playerNickname": player.nickname
-                },
+                "payload": {"playerId": player.id, "playerNickname": player.nickname},
             },
         )
 
@@ -600,8 +613,10 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
             game.finishGame(winnerNickname=player.nickname)
 
         if game.checkIfFinished():
-            
-            winner = game.players.filter(lambda p: p.nickname == game.winnerNickname).first()
+
+            winner = game.players.filter(
+                lambda p: p.nickname == game.winnerNickname
+            ).first()
 
             await manager.broadcastToGame(
                 gameId,
@@ -621,7 +636,13 @@ async def accuse(gameId: int, playerId: int, schema: AccuseSchema, response: Res
             currentPlayer = game.currentPlayer()
             await manager.broadcastToGame(
                 gameId,
-                {"type": TURN_ENDED_EVENT, "payload": {"playerId": currentPlayer.id, "playerNickname": currentPlayer.nickname}},
+                {
+                    "type": TURN_ENDED_EVENT,
+                    "payload": {
+                        "playerId": currentPlayer.id,
+                        "playerNickname": currentPlayer.nickname,
+                    },
+                },
             )
 
         return {}

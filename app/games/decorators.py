@@ -39,7 +39,7 @@ def playerInGame(f):
         with db_session:
 
             player = Player.get(id=kargs["playerId"])
-            game = Game.get(id=kargs['gameId'])
+            game = Game.get(id=kargs["gameId"])
 
             if player is None:
                 kargs["response"].status_code = status.HTTP_404_NOT_FOUND
