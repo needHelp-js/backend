@@ -182,11 +182,11 @@ async def joinGame(gameId: int, joinGameData: joinGameSchema, response: Response
 
         if game.started:
             response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": f"La partida {gameId} ya esta empezada."}
+            return {"Error": f"La partida {game.name} ya esta empezada."}
 
         if game.countPlayers() == 6:
             response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": f"La partida {gameId} ya esta llena."}
+            return {"Error": f"La partida {game.name} ya esta llena."}
 
         if game.password != joinGameData.password:
             if game.password == "":
@@ -368,7 +368,7 @@ async def suspect(
 
         if player.room is None:
             response.status_code = status.HTTP_403_FORBIDDEN
-            return {"Error": f"El jugador {playerId} no está en ningun recinto"}
+            return {"Error": f"El jugador {player.nickname} no está en ningun recinto"}
 
         card1Name = schema.card1Name
         card2Name = schema.card2Name
@@ -468,7 +468,7 @@ async def replySuspect(
         if card not in player.cards:
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {
-                "Error": f"El jugador {playerId} no tiene la carta {schema.cardName}"
+                "Error": f"El jugador {player.nickname} no tiene la carta {schema.cardName}"
             }
 
         # We now know that the selected card is valid and the player has it.

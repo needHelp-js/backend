@@ -68,7 +68,7 @@ def test_playerInGame_playerInNoGame(app, dataTirarDado):
 
     result = client.get("/test", params={"gameId": 1, "playerId": 4})
     assert result.status_code == 403
-    assert result.json() == {"Error": "El jugador 4 no esta en la partida 1."}
+    assert result.json() == {"Error": "El jugador p4 no esta en la partida g1."}
 
 
 def test_playerInGame_playerInOtherGame(app, dataTirarDado):
@@ -87,7 +87,7 @@ def test_playerInGame_playerInOtherGame(app, dataTirarDado):
 
     result = client.get("/test", params={"gameId": 1, "playerId": 4})
     assert result.status_code == 403
-    assert result.json() == {"Error": "El jugador 4 no esta en la partida 1."}
+    assert result.json() == {"Error": "El jugador p4 no esta en la partida g1."}
 
 
 def test_isPlayersTurn_success(app, dataTirarDado):
@@ -112,4 +112,4 @@ def test_isPlayersTurn_noCurrentTurn(app, dataTirarDado):
 
     result = client.get("/test", params={"gameId": 1, "playerId": 2})
     assert result.status_code == status.HTTP_403_FORBIDDEN
-    assert result.json() == {"Error": "No es el turno del jugador"}
+    assert result.json() == {"Error": "No es el turno del jugador p2"}

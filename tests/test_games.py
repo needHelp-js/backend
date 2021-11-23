@@ -376,7 +376,7 @@ def test_joinGame_failure_gameStarted(client, dataListGames):
     response = client.patch("/games/3/join", json={"playerNickname": "player_test"})
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert response.json() == {"Error": "La partida 3 ya esta empezada."}
+    assert response.json() == {"Error": "La partida g3 ya esta empezada."}
 
 
 def test_joinGame_failure_gameIsFull(client, dataListGames):
@@ -384,7 +384,7 @@ def test_joinGame_failure_gameIsFull(client, dataListGames):
     response = client.patch("/games/2/join", json={"playerNickname": "player_test"})
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert response.json() == {"Error": "La partida 2 ya esta llena."}
+    assert response.json() == {"Error": "La partida g2 ya esta llena."}
 
 
 def test_getGameDetails_success(client, dataListGames):
@@ -660,7 +660,7 @@ def test_suspect_playerInNoRoom(client, dataSuspect):
             },
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert response.json() == {"Error": f"El jugador 1 no está en ningun recinto"}
+        assert response.json() == {"Error": f"El jugador p1 no está en ningun recinto"}
 
 
 def test_suspect_card1NoExists(client, dataCards):
@@ -722,7 +722,7 @@ def test_suspect_noCurrentTurn(client, dataCards):
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert response.json() == {"Error": "No es el turno del jugador"}
+    assert response.json() == {"Error": "No es el turno del jugador p2"}
 
 
 def test_replySuspect_success(client, dataSuspect):
@@ -806,7 +806,7 @@ def test_replySuspect_playerDontHaveCard(client, dataSuspect):
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {"Error": "El jugador 2 no tiene la carta Conde"}
+    assert response.json() == {"Error": "El jugador p2 no tiene la carta Conde"}
 
 
 def test_replySuspect_repliedNoExists(client, dataSuspect):
