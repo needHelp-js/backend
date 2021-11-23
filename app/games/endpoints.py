@@ -396,7 +396,6 @@ async def suspect(
             return {"Error": "Este jugador ya realizó una sospecha"}
 
         response.status_code = status.HTTP_204_NO_CONTENT
-        player.hasSuspected = True
         await manager.broadcastToGame(
             gameId,
             {
@@ -411,6 +410,7 @@ async def suspect(
             },
         )
 
+        player.hasSuspected = True
         player.isSuspecting = True
 
         game = Game[gameId]
