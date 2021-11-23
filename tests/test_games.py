@@ -792,7 +792,7 @@ def test_replySuspect_success(client, dataSuspect):
         assert ans["payload"] == {"playerId": 2, "playerNickname": "p2"}
 
         with db_session:
-            assert Player[1].isSuspecting
+            assert not Player[1].isSuspecting
 
 
 def test_replySuspect_cardNoExists(client, dataSuspect):
