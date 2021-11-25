@@ -21,6 +21,10 @@ class GameMixin(object):
         if self.currentPlayer().hasLost:
             self.incrementTurn()
 
+        if self.currentPlayer().isInTrap:
+            self.currentPlayer().isInTrap = False
+            self.incrementTurn()
+
     def currentPlayer(self):
         return self.players.filter(
             lambda player: player.turnOrder == self.currentTurn

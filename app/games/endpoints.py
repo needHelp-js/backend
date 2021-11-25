@@ -308,6 +308,10 @@ async def movePlayer(
             if board.checkPosition(player, data.diceNumber, data.position):
 
                 position = board.getPositionIdFromTuple(data.position)
+                
+                if position in board._traps:
+                    player.isInTrap = True
+                
                 player.position = position
                 player.room = None
                 player.hasMoved = True

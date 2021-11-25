@@ -24,6 +24,7 @@ class BoardManager:
         self._specialCells = []
         self._boardTuples = {}
         self._boardId = [[]]
+        self._traps = []
 
     def createBoard(self):
         """Creates and configures the initials things for the board
@@ -104,6 +105,9 @@ class BoardManager:
         self._specialCells.append(specialCell7)
         specialCell8 = SpecialCell(initialPosition=(14, 13), teleportPosition=(3, 13))
         self._specialCells.append(specialCell8)
+
+        #Trap cells
+        self._traps = [126, 133, 266, 273]
 
         i = 0
         for j in range(20):
