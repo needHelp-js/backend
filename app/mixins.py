@@ -35,9 +35,9 @@ class GameMixin(object):
         aux = 0
         for player in self.players:
             if player.hostedGame != None:
-                aux = player.turnOrder 
+                aux = player.turnOrder
                 player.turnOrder = 1
-        
+
         for player in self.players:
             if player.turnOrder == 1 and player.hostedGame == None:
                 player.turnOrder = aux

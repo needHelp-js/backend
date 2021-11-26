@@ -6,14 +6,14 @@ from app.enums import CardType
 from app.games.boardManager import BoardManager
 from app.games.connections import GameConnectionManager
 from app.games.decorators import gameRequired, isPlayersTurn, playerInGame
-from app.games.events import (BEGIN_GAME_EVENT, DEAL_CARDS_EVENT,
-                              DICE_ROLL_EVENT, ENTER_ROOM_EVENT,
-                              GAME_ENDED_EVENT, MOVE_PLAYER_EVENT,
-                              PLAYER_ACCUSED_EVENT, PLAYER_JOINED_EVENT,
-                              PLAYER_LOST_EVENT, PLAYER_REPLIED_EVENT,
-                              SUSPICION_FAILED_EVENT, SUSPICION_MADE_EVENT,
-                              SUSPICION_RESPONSE_EVENT, TURN_ENDED_EVENT,
-                              YOU_ARE_SUSPICIOUS_EVENT)
+from app.games.events import (BEGIN_GAME_EVENT, BRUJA_SALEM_EVENT,
+                              DEAL_CARDS_EVENT, DICE_ROLL_EVENT,
+                              ENTER_ROOM_EVENT, GAME_ENDED_EVENT,
+                              MOVE_PLAYER_EVENT, PLAYER_ACCUSED_EVENT,
+                              PLAYER_JOINED_EVENT, PLAYER_LOST_EVENT,
+                              PLAYER_REPLIED_EVENT, SUSPICION_FAILED_EVENT,
+                              SUSPICION_MADE_EVENT, SUSPICION_RESPONSE_EVENT,
+                              TURN_ENDED_EVENT, YOU_ARE_SUSPICIOUS_EVENT)
 from app.games.exceptions import (GameConnectionDoesNotExist,
                                   PlayerAlreadyConnected, PlayerNotConnected)
 from app.games.schemas import (AccuseSchema, AvailableGameSchema,
@@ -117,6 +117,27 @@ async def beginGame(gameID: int, playerID: int, response: Response):
                         )
                     except PlayerNotConnected:
                         pass
+
+                # Bruja salem
+                i = randint(0, len(game.players) - 1)
+                players = list(game.players)
+                player = players[i]
+                cardsInEnvelope = Card.select(
+                    lambda c: c.game.id == gameID and c.isInEnvelope
+                )[:]
+
+                i = randint(0, 2)
+                selectedCard = cardsInEnvelope[i]
+
+                try:
+                    await manager.sendToPlayer(
+                        gameID,
+                        player.id,
+                        {"type": BRUJA_SALEM_EVENT, "payload": selectedCard.name},
+                    )
+
+                except PlayerNotConnected:
+                    pass
 
                 return {}
 
