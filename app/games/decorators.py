@@ -39,6 +39,7 @@ def playerInGame(f):
         with db_session:
 
             player = Player.get(id=kargs["playerId"])
+            game = Game.get(id=kargs["gameId"])
 
             if player is None:
                 kargs["response"].status_code = status.HTTP_404_NOT_FOUND
@@ -47,7 +48,7 @@ def playerInGame(f):
             if player.currentGame is None or player.currentGame.id != kargs["gameId"]:
                 kargs["response"].status_code = status.HTTP_403_FORBIDDEN
                 return {
-                    "Error": f"El jugador {kargs['playerId']} no esta en la partida {kargs['gameId']}."
+                    "Error": f"El jugador {player.nickname} no esta en la partida {game.name}."
                 }
 
             return await f(*args, **kargs)
@@ -72,7 +73,7 @@ def isPlayersTurn(f):
 
             if player.turnOrder != player.currentGame.currentTurn:
                 kargs["response"].status_code = status.HTTP_403_FORBIDDEN
-                return {"Error": "No es el turno del jugador"}
+                return {"Error": f"No es el turno del jugador {player.nickname}"}
 
             return await f(*args, **kargs)
 

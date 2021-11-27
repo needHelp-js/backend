@@ -1,4 +1,5 @@
 from random import randrange
+from sys import set_asyncgen_hooks
 from typing import List
 
 from app import models
@@ -17,11 +18,29 @@ class GameMixin(object):
         else:
             self.currentTurn += 1
 
+        if self.currentPlayer().hasLost:
+            self.incrementTurn()
+
+    def currentPlayer(self):
+        return self.players.filter(
+            lambda player: player.turnOrder == self.currentTurn
+        ).first()
+
     def setPlayersTurnOrder(self):
         turnToAssign = 1
         for player in self.players:
             player.turnOrder = turnToAssign
             turnToAssign += 1
+
+        aux = 0
+        for player in self.players:
+            if player.hostedGame != None:
+                aux = player.turnOrder 
+                player.turnOrder = 1
+        
+        for player in self.players:
+            if player.turnOrder == 1 and player.hostedGame == None:
+                player.turnOrder = aux
 
     def setPlayersInitialPositions(self):
         initialPositions = [6, 13, 120, 139, 260, 279, 386, 393]
@@ -31,11 +50,11 @@ class GameMixin(object):
             i += 1
 
     def startGame(self):
+        self.setPlayersTurnOrder()
         self.setPlayersInitialPositions()
         self.currentTurn = 1
         cards = self.createGameCards()
         self.assignCardsToPlayers(cards)
-        self.setPlayersTurnOrder()
         self.started = True
 
     def createGameCards(self):
@@ -107,7 +126,24 @@ class GameMixin(object):
             players[i % len(players)].cards.add(card_set.pop())
             i += 1
 
+    def finishGame(self, winnerNickname: str):
+        self.ended = True
+        self.winnerNickname = winnerNickname
+
+    def checkIfFinished(self):
+        playersPlaying = self.players.filter(lambda p: not p.hasLost)[:]
+
+        if len(playersPlaying) <= 1:
+            self.finishGame(winnerNickname=playersPlaying[0].nickname)
+
+        return self.ended
+
 
 class PlayerMixin:
     def filterCards(self, cardNames: List[str]):
         return self.cards.filter(lambda card: card.name in cardNames)
+
+    def looseGame(self):
+        self.hasLost = True
+        self.position = None
+        self.room = None

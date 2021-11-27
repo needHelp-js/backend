@@ -14,6 +14,9 @@ class Game(db.Entity, GameMixin):
     players = Set("Player", reverse="currentGame")
     host = Required("Player", reverse="hostedGame")
     cards = Set("Card")
+    ended = Required(bool, default=False)
+    winnerNickname = Optional(str)
+    password = Optional(str, default="")
 
 
 class Player(db.Entity, PlayerMixin):
@@ -26,6 +29,10 @@ class Player(db.Entity, PlayerMixin):
     room = Optional(int)
     isSuspecting = Required(bool, default=False)
     cards = Set("Card")
+    hasLost = Required(bool, default=False)
+    hasMoved = Required(bool, default=False)
+    hasSuspected = Required(bool, default=False)
+    hasRolledDice = Required(bool, default=False)
 
 
 def checkCardType(val):

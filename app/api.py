@@ -1,7 +1,8 @@
+from app.exception_handlers import validation_exception_handler
 from config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.exceptions import RequestValidationError
 from app.models import db
 
 origins = ["*"]
@@ -25,5 +26,6 @@ def create_app(config: Config):
     )
 
     app.include_router(gamesRouter)
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
     return app, db
