@@ -47,5 +47,5 @@ docker image build -t [nombre a dar a la imagen] .
 Para correr el contenedor
 
 ```bash
-docker container --name [nombre a dar al contender] --env PORT=[numero de puerto] -p [puerto dado]:[puerto dado] [nombre de la imagen]
+docker container run --name [nombre a dar al contender] --env PORT=[numero de puerto] -p [puerto dado]:[puerto dado] [nombre de la imagen]
 ```
